@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscar Lote</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .card {
+    background: #fff;
+    padding: 32px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 320px;
+    text-align: center;
+  }
+  h2 {
+    margin-top: 0;
+    color: #333;
+  }
+  label {
+    display: block;
+    margin-top: 16px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #555;
+    text-align: left;
+  }
+  input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+  button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 10px;
+    background: #4A90E2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #357ABD;
+  }
+  .volver {
+    display: block;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #888;
+    text-decoration: none;
+  }
+  .volver:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Buscar Lote o Producto</h2>
+  <form id="formBuscar">
+    <label for="lote">Número de lote</label>
+    <input type="text" id="lote" placeholder="Ej: 1977" autofocus>
+    <button type="submit">Buscar</button>
+  </form>
+  <a class="volver" href="inicio.html">← Volver al inicio</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ==== Conexión con Supabase ====
+  // Misma URL y llave usadas en "Agregar Información" y "Consultar Lotes",
+  // para que las tres páginas trabajen sobre el mismo proyecto.
+  const SUPABASE_URL = 'https://eqbzvxtxvrzrbnbfhslk.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxYnp2eHR4dnJ6cmJuYmZoc2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMDE3MzQsImV4cCI6MjEwMDc3NzczNH0.2EZ84ANMel8GGOKzT_H-LOxpuqvxn-CZ4tbcPm2IPc0';
+  const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  document.getElementById('formBuscar').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const lote = document.getElementById('lote').value.trim();
+
+    if (!lote) {
+      window.location.href = 'consultar-lotes.html';
+      return;
+    }
+
+    // Verifica en Supabase si ese lote ya existe, para avisar antes de
+    // entrar a la ficha (por si el usuario tecleó mal el número).
+    try {
+      const { data, error } = await clienteSupabase
+        .from('lotes')
+        .select('lote')
+        .eq('lote', lote)
+        .maybeSingle();
+
+      if (!error && !data) {
+        const continuar = confirm('No se encontró el lote "' + lote + '" en la base de datos.\n¿Deseas abrir la ficha de todas formas para crearlo?');
+        if (!continuar) return;
+      }
+    } catch (err) {
+      console.error('No se pudo verificar el lote en Supabase:', err);
+    }
+
+    window.location.href = 'consultar-lotes.html?lote=' + encodeURIComponent(lote);
+  });
+</script>
+
+</body>
+</html>
