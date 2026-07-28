@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consultar Lotes</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f9;
+    margin: 0;
+    padding: 24px;
+  }
+  .contenedor {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  h2 {
+    color: #333;
+    margin: 0;
+  }
+  .volver {
+    background: #888;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .volver:hover {
+    background: #666;
+  }
+  .ficha {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 20px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+  }
+  td, th {
+    border: 1px solid #999;
+    padding: 6px 8px;
+    vertical-align: middle;
+  }
+  th {
+    background: #B0B0B0;
+    color: white;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  .etiqueta {
+    background: #eef4fc;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+  input[type="text"] {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 4px;
+    font-size: 13px;
+  }
+  input[type="text"]:focus {
+    outline: 1px solid #B0B0B0;
+    background: #fffde7;
+  }
+  .fila-cabecera td {
+    padding: 8px;
+  }
+  .titulo-seccion {
+    text-align: center;
+  }
+  .acciones {
+    text-align: right;
+    margin-top: 16px;
+  }
+  .acciones button {
+    background: #B0B0B0;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .acciones button:hover {
+    background: #949494;
+  }
+</style>
+</head>
+<body>
+
+<div class="contenedor">
+  <div class="encabezado">
+    <h2>Consultar / Registrar Lote</h2>
+    <button class="volver" onclick="window.location.href='inicio.html'">← Volver al inicio</button>
+  </div>
+
+  <div class="ficha">
+    <table>
+      <!-- Fila superior -->
+      <tr class="fila-cabecera">
+        <td class="etiqueta" style="width:90px;">Fecha:</td>
+        <td colspan="3"><input type="text" placeholder="dd/mm/aaaa"></td>
+        <td class="etiqueta" style="width:150px;">Número de lote:</td>
+        <td colspan="2"><input type="text"></td>
+        <td class="etiqueta" style="width:50px;">S/S</td>
+        <td><input type="text"></td>
+      </tr>
+
+      <!-- Fila análisis físico -->
+      <tr class="fila-cabecera">
+        <td class="etiqueta" colspan="2">Análisis físico:</td>
+        <td class="etiqueta">Faltas:</td>
+        <td><input type="text"></td>
+        <td class="etiqueta">No. Muestra:</td>
+        <td colspan="2"><input type="text"></td>
+      </tr>
+
+      <!-- Encabezados de las 3 secciones -->
+      <tr>
+        <th>Color granos</th>
+        <th># granos</th>
+        <th>Tolta falta</th>
+        <th>Color granos</th>
+        <th># granos</th>
+        <th>Tolta falta</th>
+        <th colspan="2">Granulometría</th>
+      </tr>
+
+      <!-- Filas de datos (11 filas, combinando las 3 secciones) -->
+      <tr>
+        <td class="etiqueta">Negro</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">Partidos</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">18</td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Rojo</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">Pasilla máquinas</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">17</td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Vinagre</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">Concha</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">16</td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Mantequillo</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">Blanco decolorado</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">15</td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Reposado</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">Aplastados</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">14</td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Cardenillo</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">Vano Balsudos</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">13</td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Piedras, palos, otros</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">Averanado arrugado</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">12</td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Guayaba</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">Brocados</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">0</td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Negro parcial</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td class="etiqueta">Brocas punto</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Vinagre parcial</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Cardenillo parcial</td>
+        <td><input type="text"></td>
+        <td><input type="text"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      <!-- Observación -->
+      <tr>
+        <td class="etiqueta">Observación:</td>
+        <td colspan="7"><input type="text"></td>
+      </tr>
+    </table>
+
+    <div class="acciones">
+      <button onclick="alert('Aquí puedes conectar el guardado real de la ficha (backend o base de datos).')">Guardar ficha</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
