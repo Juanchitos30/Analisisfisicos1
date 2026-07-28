@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consultar Lotes</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f9;
+    margin: 0;
+    padding: 24px;
+  }
+  .contenedor {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  h2 {
+    color: #333;
+    margin: 0;
+  }
+  .volver {
+    background: #888;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .volver:hover {
+    background: #666;
+  }
+  .ficha {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 20px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12px;
+  }
+  td, th {
+    border: 1px solid #999;
+    padding: 3px 5px;
+    vertical-align: middle;
+    line-height: 1.2;
+  }
+  th {
+    background: #B0B0B0;
+    color: white;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+  .etiqueta {
+    background: #eef4fc;
+    font-weight: bold;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  input[type="text"] {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 2px 3px;
+    font-size: 12px;
+  }
+  input[type="text"]:focus {
+    outline: 1px solid #B0B0B0;
+    background: #fffde7;
+  }
+  .fila-cabecera td {
+    padding: 4px 5px;
+  }
+  .acciones {
+    text-align: right;
+    margin-top: 16px;
+  }
+  .acciones button {
+    background: #B0B0B0;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .acciones button:hover {
+    background: #949494;
+  }
+</style>
+</head>
+<body>
+
+<div class="contenedor">
+  <div class="encabezado">
+    <h2>Consultar / Registrar Lote</h2>
+    <button class="volver" onclick="window.location.href='buscar-lote.html'">← Volver al buscador</button>
+  </div>
+
+  <div class="ficha">
+    <table id="tablaFicha">
+      <!-- Fila superior -->
+      <tr class="fila-cabecera">
+        <td class="etiqueta" style="width:90px;">Fecha:</td>
+        <td colspan="3"><input type="text" id="fecha" placeholder="dd/mm/aaaa"></td>
+        <td class="etiqueta" style="width:150px;">Número de lote:</td>
+        <td colspan="2"><input type="text" id="numeroLote"></td>
+      </tr>
+
+      <!-- Fila análisis físico -->
+      <tr class="fila-cabecera">
+        <td class="etiqueta" colspan="2">Análisis físico:</td>
+        <td class="etiqueta">Faltas:</td>
+        <td><input type="text" id="faltas"></td>
+        <td class="etiqueta">No. Muestra:</td>
+        <td colspan="2"><input type="text" id="noMuestra"></td>
+      </tr>
+
+      <!-- Encabezados de las 2 secciones -->
+      <tr>
+        <th>Color granos</th>
+        <th># granos</th>
+        <th>Color granos</th>
+        <th># granos</th>
+        <th colspan="2">Granulometría</th>
+      </tr>
+
+      <!-- Filas de datos -->
+      <tr>
+        <td class="etiqueta">Negro</td>
+        <td><input type="text" id="neg_num"></td>
+        <td class="etiqueta">Partidos</td>
+        <td><input type="text" id="part_num"></td>
+        <td class="etiqueta">18</td>
+        <td><input type="text" id="g18"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Rojo</td>
+        <td><input type="text" id="rojo_num"></td>
+        <td class="etiqueta">Pasilla máquinas</td>
+        <td><input type="text" id="pasilla_num"></td>
+        <td class="etiqueta">17</td>
+        <td><input type="text" id="g17"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Vinagre</td>
+        <td><input type="text" id="vin_num"></td>
+        <td class="etiqueta">Concha</td>
+        <td><input type="text" id="concha_num"></td>
+        <td class="etiqueta">16</td>
+        <td><input type="text" id="g16"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Mantequillo</td>
+        <td><input type="text" id="mant_num"></td>
+        <td class="etiqueta">Blanco decolorado</td>
+        <td><input type="text" id="blanco_num"></td>
+        <td class="etiqueta">15</td>
+        <td><input type="text" id="g15"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Reposado</td>
+        <td><input type="text" id="repo_num"></td>
+        <td class="etiqueta">Aplastados</td>
+        <td><input type="text" id="aplas_num"></td>
+        <td class="etiqueta">14</td>
+        <td><input type="text" id="g14"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Cardenillo</td>
+        <td><input type="text" id="card_num"></td>
+        <td class="etiqueta">Vano Balsudos</td>
+        <td><input type="text" id="vano_num"></td>
+        <td class="etiqueta">13</td>
+        <td><input type="text" id="g13"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Piedras, palos, otros</td>
+        <td><input type="text" id="piedras_num"></td>
+        <td class="etiqueta">Averanado arrugado</td>
+        <td><input type="text" id="aver_num"></td>
+        <td class="etiqueta">12</td>
+        <td><input type="text" id="g12"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Guayaba</td>
+        <td><input type="text" id="guay_num"></td>
+        <td class="etiqueta">Brocados</td>
+        <td><input type="text" id="broc_num"></td>
+        <td class="etiqueta">0</td>
+        <td><input type="text" id="g0"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Negro parcial</td>
+        <td><input type="text" id="negpar_num"></td>
+        <td class="etiqueta">Brocas punto</td>
+        <td><input type="text" id="brocas_num"></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Vinagre parcial</td>
+        <td><input type="text" id="vinpar_num"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Cardenillo parcial</td>
+        <td><input type="text" id="cardpar_num"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      <!-- Observación -->
+      <tr>
+        <td class="etiqueta">Observación:</td>
+        <td colspan="5"><input type="text" id="observacion"></td>
+      </tr>
+    </table>
+
+    <div class="acciones">
+      <button onclick="descargarExcel()">Guardar ficha (Excel)</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script>
+  // Base de datos de ejemplo: cada lote se identifica por el código
+  // usado en el buscador (ej: "0001") y contiene los valores de su ficha.
+  const basesDeDatos = {
+    "0001": {
+      fecha: "",
+      numeroLote: "1977",
+      faltas: "12.6",
+      noMuestra: "Bx75",
+      neg_num: "",
+      rojo_num: "",
+      vin_num: "2",
+      mant_num: "",
+      repo_num: "",
+      card_num: "",
+      piedras_num: "",
+      guay_num: "",
+      negpar_num: "2",
+      vinpar_num: "6",
+      cardpar_num: "",
+      part_num: "14",
+      pasilla_num: "3",
+      concha_num: "",
+      blanco_num: "4",
+      aplas_num: "",
+      vano_num: "3",
+      aver_num: "",
+      broc_num: "2",
+      brocas_num: "20",
+      g18: "",
+      g17: "34.2",
+      g16: "25",
+      g15: "11.7",
+      g14: "1.7",
+      g13: "0.2",
+      g12: "",
+      g0: "",
+      observacion: "1.4% bajo M15"
+    }
+  };
+
+  // Relación entre los nombres de campo guardados desde
+  // "Agregar Información" (localStorage) y los ids de esta tabla.
+  const mapaCampos = {
+    g1_negro: 'neg_num',
+    g1_rojo: 'rojo_num',
+    g1_vinagre: 'vin_num',
+    g1_mantequillo: 'mant_num',
+    g1_reposado: 'repo_num',
+    g1_cardenillo: 'card_num',
+    g1_piedras: 'piedras_num',
+    g1_guayaba: 'guay_num',
+    g1_negroparcial: 'negpar_num',
+    g1_vinagreparcial: 'vinpar_num',
+    g1_cardenilloparcial: 'cardpar_num',
+    g2_partidos: 'part_num',
+    g2_pasilla: 'pasilla_num',
+    g2_concha: 'concha_num',
+    g2_blanco: 'blanco_num',
+    g2_aplastados: 'aplas_num',
+    g2_vano: 'vano_num',
+    g2_averanado: 'aver_num',
+    g2_brocados: 'broc_num',
+    g2_brocaspunto: 'brocas_num',
+    malla_18: 'g18',
+    malla_17: 'g17',
+    malla_16: 'g16',
+    malla_15: 'g15',
+    malla_14: 'g14',
+    malla_13: 'g13',
+    malla_12: 'g12',
+    malla_0: 'g0'
+  };
+
+  // Convierte una fecha en formato yyyy-mm-dd (la que entrega el
+  // selector de fecha de "Agregar Información") a dd/mm/aaaa.
+  function formatearFecha(fechaISO) {
+    if (!fechaISO) return '';
+    const partes = fechaISO.split('-');
+    if (partes.length !== 3) return fechaISO;
+    return partes[2] + '/' + partes[1] + '/' + partes[0];
+  }
+
+  // Precarga los datos del lote si viene en la URL (?lote=0001)
+  window.addEventListener('DOMContentLoaded', function() {
+    const parametros = new URLSearchParams(window.location.search);
+    const lote = parametros.get('lote');
+
+    if (!lote) return;
+
+    // 1) Primero busca en los lotes guardados desde "Agregar Información"
+    const lotesGuardados = JSON.parse(localStorage.getItem('lotesGuardados') || '{}');
+    const datosGuardados = lotesGuardados[lote];
+
+    if (datosGuardados) {
+      document.getElementById('numeroLote').value = lote;
+
+      if (datosGuardados.muestra) {
+        document.getElementById('noMuestra').value = datosGuardados.muestra;
+      }
+
+      if (datosGuardados.fecha) {
+        document.getElementById('fecha').value = formatearFecha(datosGuardados.fecha);
+      }
+
+      Object.keys(mapaCampos).forEach(function(campoGuardado) {
+        const idTabla = mapaCampos[campoGuardado];
+        const input = document.getElementById(idTabla);
+        if (input && datosGuardados[campoGuardado]) {
+          input.value = datosGuardados[campoGuardado];
+        }
+      });
+      return;
+    }
+
+    // 2) Si no está en los lotes guardados, revisa la base de datos de ejemplo
+    if (basesDeDatos[lote]) {
+      const datos = basesDeDatos[lote];
+      Object.keys(datos).forEach(function(campoId) {
+        const input = document.getElementById(campoId);
+        if (input) input.value = datos[campoId];
+      });
+    } else {
+      // Si tampoco existe ahí, al menos deja el número escrito,
+      // para crear una ficha nueva.
+      document.getElementById('numeroLote').value = lote;
+    }
+  });
+
+  async function descargarExcel() {
+    const val = function(id) {
+      const el = document.getElementById(id);
+      return el ? el.value : '';
+    };
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Ficha de lote');
+
+    sheet.columns = [
+      { width: 22 }, { width: 12 }, { width: 22 }, { width: 12 },
+      { width: 14 }, { width: 10 }, { width: 10 }
+    ];
+
+    const colorTitulo = 'FF4A90E2';
+    const colorSubtitulo = 'FFB0B0B0';
+    const colorEtiqueta = 'FFEEF4FC';
+    const bordeFino = { style: 'thin', color: { argb: 'FF999999' } };
+    const bordes = { top: bordeFino, left: bordeFino, bottom: bordeFino, right: bordeFino };
+
+    function estilo(cell, opts) {
+      opts = opts || {};
+      cell.border = bordes;
+      cell.alignment = {
+        vertical: 'middle',
+        horizontal: opts.centrar ? 'center' : 'left',
+        wrapText: true
+      };
+      if (opts.negrita || opts.color) {
+        cell.font = { bold: !!opts.negrita, color: opts.color ? { argb: opts.color } : undefined, size: opts.tamano };
+      }
+      if (opts.relleno) {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: opts.relleno } };
+      }
+    }
+
+    // Título principal
+    sheet.mergeCells('A1:G1');
+    const titulo = sheet.getCell('A1');
+    titulo.value = 'Ficha de Análisis de Lote';
+    estilo(titulo, { negrita: true, relleno: colorTitulo, color: 'FFFFFFFF', centrar: true, tamano: 14 });
+    sheet.getRow(1).height = 26;
+
+    // Fila Fecha / Número de lote
+    sheet.getCell('A2').value = 'Fecha:';
+    estilo(sheet.getCell('A2'), { negrita: true, relleno: colorEtiqueta });
+
+    sheet.mergeCells('B2:D2');
+    sheet.getCell('B2').value = val('fecha');
+    estilo(sheet.getCell('B2'));
+
+    sheet.getCell('E2').value = 'Número de lote:';
+    estilo(sheet.getCell('E2'), { negrita: true, relleno: colorEtiqueta });
+
+    sheet.mergeCells('F2:G2');
+    sheet.getCell('F2').value = val('numeroLote');
+    estilo(sheet.getCell('F2'), { centrar: true });
+
+    // Fila Análisis físico / Faltas / No. Muestra
+    sheet.mergeCells('A3:B3');
+    sheet.getCell('A3').value = 'Análisis físico:';
+    estilo(sheet.getCell('A3'), { negrita: true, relleno: colorEtiqueta });
+
+    sheet.getCell('C3').value = 'Faltas:';
+    estilo(sheet.getCell('C3'), { negrita: true, relleno: colorEtiqueta });
+
+    sheet.getCell('D3').value = val('faltas');
+    estilo(sheet.getCell('D3'), { centrar: true });
+
+    sheet.mergeCells('E3:F3');
+    sheet.getCell('E3').value = 'No. Muestra:';
+    estilo(sheet.getCell('E3'), { negrita: true, relleno: colorEtiqueta });
+
+    sheet.getCell('G3').value = val('noMuestra');
+    estilo(sheet.getCell('G3'), { centrar: true });
+
+    // Encabezados de columnas
+    const filaEncabezados = 4;
+    ['Color granos', '# granos', 'Color granos', '# granos'].forEach(function(texto, i) {
+      const cell = sheet.getCell(filaEncabezados, i + 1);
+      cell.value = texto;
+      estilo(cell, { negrita: true, relleno: colorSubtitulo, color: 'FFFFFFFF', centrar: true });
+    });
+    sheet.mergeCells(filaEncabezados, 5, filaEncabezados, 7);
+    const encGranulometria = sheet.getCell(filaEncabezados, 5);
+    encGranulometria.value = 'Granulometría';
+    estilo(encGranulometria, { negrita: true, relleno: colorSubtitulo, color: 'FFFFFFFF', centrar: true });
+
+    // Datos de los grupos y granulometría
+    const grupo1 = [
+      ['Negro', 'neg_num'], ['Rojo', 'rojo_num'], ['Vinagre', 'vin_num'],
+      ['Mantequillo', 'mant_num'], ['Reposado', 'repo_num'], ['Cardenillo', 'card_num'],
+      ['Piedras, palos, otros', 'piedras_num'], ['Guayaba', 'guay_num'],
+      ['Negro parcial', 'negpar_num'], ['Vinagre parcial', 'vinpar_num'],
+      ['Cardenillo parcial', 'cardpar_num']
+    ];
+    const grupo2 = [
+      ['Partidos', 'part_num'], ['Pasilla máquinas', 'pasilla_num'], ['Concha', 'concha_num'],
+      ['Blanco decolorado', 'blanco_num'], ['Aplastados', 'aplas_num'], ['Vano Balsudos', 'vano_num'],
+      ['Averanado arrugado', 'aver_num'], ['Brocados', 'broc_num'], ['Brocas punto', 'brocas_num']
+    ];
+    const malla = [
+      ['18', 'g18'], ['17', 'g17'], ['16', 'g16'], ['15', 'g15'],
+      ['14', 'g14'], ['13', 'g13'], ['12', 'g12'], ['0', 'g0']
+    ];
+
+    const totalFilas = Math.max(grupo1.length, grupo2.length, malla.length);
+    const filaInicio = filaEncabezados + 1;
+
+    for (let i = 0; i < totalFilas; i++) {
+      const fila = filaInicio + i;
+
+      const lbl1 = sheet.getCell(fila, 1);
+      const val1 = sheet.getCell(fila, 2);
+      if (grupo1[i]) {
+        lbl1.value = grupo1[i][0];
+        val1.value = val(grupo1[i][1]);
+      }
+      estilo(lbl1, { negrita: true, relleno: colorEtiqueta });
+      estilo(val1, { centrar: true });
+
+      const lbl2 = sheet.getCell(fila, 3);
+      const val2 = sheet.getCell(fila, 4);
+      if (grupo2[i]) {
+        lbl2.value = grupo2[i][0];
+        val2.value = val(grupo2[i][1]);
+      }
+      estilo(lbl2, { negrita: true, relleno: colorEtiqueta });
+      estilo(val2, { centrar: true });
+
+      const lblM = sheet.getCell(fila, 5);
+      sheet.mergeCells(fila, 6, fila, 7);
+      const valM = sheet.getCell(fila, 6);
+      if (malla[i]) {
+        lblM.value = malla[i][0];
+        valM.value = val(malla[i][1]);
+      }
+      estilo(lblM, { negrita: true, relleno: colorEtiqueta, centrar: true });
+      estilo(valM, { centrar: true });
+    }
+
+    // Observación
+    const filaObs = filaInicio + totalFilas;
+    const lblObs = sheet.getCell(filaObs, 1);
+    lblObs.value = 'Observación:';
+    estilo(lblObs, { negrita: true, relleno: colorEtiqueta });
+
+    sheet.mergeCells(filaObs, 2, filaObs, 7);
+    const valObs = sheet.getCell(filaObs, 2);
+    valObs.value = val('observacion');
+    estilo(valObs);
+
+    // Genera y descarga el archivo
+    const numeroLote = val('numeroLote').trim();
+    const nombreArchivo = numeroLote
+      ? 'ficha-lote-' + numeroLote + '.xlsx'
+      : 'ficha-lote.xlsx';
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = nombreArchivo;
+    document.body.appendChild(enlace);
+    enlace.click();
+    document.body.removeChild(enlace);
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+</body>
+</html>
