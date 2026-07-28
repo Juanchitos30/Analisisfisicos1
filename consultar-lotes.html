@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consultar Lotes</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f9;
+    margin: 0;
+    padding: 24px;
+  }
+  .contenedor {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  h2 {
+    color: #333;
+    margin: 0;
+  }
+  .volver {
+    background: #888;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .volver:hover {
+    background: #666;
+  }
+  .ficha {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 20px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12px;
+  }
+  td, th {
+    border: 1px solid #999;
+    padding: 3px 5px;
+    vertical-align: middle;
+    line-height: 1.2;
+  }
+  th {
+    background: #B0B0B0;
+    color: white;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+  .etiqueta {
+    background: #eef4fc;
+    font-weight: bold;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  input[type="text"] {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 2px 3px;
+    font-size: 12px;
+  }
+  input[type="text"]:focus {
+    outline: 1px solid #B0B0B0;
+    background: #fffde7;
+  }
+  .fila-cabecera td {
+    padding: 4px 5px;
+  }
+  .acciones {
+    text-align: right;
+    margin-top: 16px;
+  }
+  .acciones button {
+    background: #B0B0B0;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .acciones button:hover {
+    background: #949494;
+  }
+</style>
+</head>
+<body>
+
+<div class="contenedor">
+  <div class="encabezado">
+    <h2>Consultar / Registrar Lote</h2>
+    <button class="volver" onclick="window.location.href='buscar-lote.html'">← Volver al buscador</button>
+  </div>
+
+  <div class="ficha">
+    <table id="tablaFicha">
+      <!-- Fila superior -->
+      <tr class="fila-cabecera">
+        <td class="etiqueta" style="width:90px;">Fecha:</td>
+        <td colspan="3"><input type="text" id="fecha" placeholder="dd/mm/aaaa"></td>
+        <td class="etiqueta" style="width:150px;">Número de lote:</td>
+        <td colspan="2"><input type="text" id="numeroLote"></td>
+      </tr>
+
+      <!-- Fila análisis físico -->
+      <tr class="fila-cabecera">
+        <td class="etiqueta" colspan="2">Análisis físico:</td>
+        <td class="etiqueta">Faltas:</td>
+        <td><input type="text" id="faltas"></td>
+        <td class="etiqueta">No. Muestra:</td>
+        <td colspan="2"><input type="text" id="noMuestra"></td>
+      </tr>
+
+      <!-- Encabezados de las 2 secciones -->
+      <tr>
+        <th>Color granos</th>
+        <th># granos</th>
+        <th>Color granos</th>
+        <th># granos</th>
+        <th colspan="2">Granulometría</th>
+      </tr>
+
+      <!-- Filas de datos -->
+      <tr>
+        <td class="etiqueta">Negro</td>
+        <td><input type="text" id="neg_num"></td>
+        <td class="etiqueta">Partidos</td>
+        <td><input type="text" id="part_num"></td>
+        <td class="etiqueta">18</td>
+        <td><input type="text" id="g18"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Rojo</td>
+        <td><input type="text" id="rojo_num"></td>
+        <td class="etiqueta">Pasilla máquinas</td>
+        <td><input type="text" id="pasilla_num"></td>
+        <td class="etiqueta">17</td>
+        <td><input type="text" id="g17"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Vinagre</td>
+        <td><input type="text" id="vin_num"></td>
+        <td class="etiqueta">Concha</td>
+        <td><input type="text" id="concha_num"></td>
+        <td class="etiqueta">16</td>
+        <td><input type="text" id="g16"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Mantequillo</td>
+        <td><input type="text" id="mant_num"></td>
+        <td class="etiqueta">Blanco decolorado</td>
+        <td><input type="text" id="blanco_num"></td>
+        <td class="etiqueta">15</td>
+        <td><input type="text" id="g15"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Reposado</td>
+        <td><input type="text" id="repo_num"></td>
+        <td class="etiqueta">Aplastados</td>
+        <td><input type="text" id="aplas_num"></td>
+        <td class="etiqueta">14</td>
+        <td><input type="text" id="g14"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Cardenillo</td>
+        <td><input type="text" id="card_num"></td>
+        <td class="etiqueta">Vano Balsudos</td>
+        <td><input type="text" id="vano_num"></td>
+        <td class="etiqueta">13</td>
+        <td><input type="text" id="g13"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Piedras, palos, otros</td>
+        <td><input type="text" id="piedras_num"></td>
+        <td class="etiqueta">Averanado arrugado</td>
+        <td><input type="text" id="aver_num"></td>
+        <td class="etiqueta">12</td>
+        <td><input type="text" id="g12"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Guayaba</td>
+        <td><input type="text" id="guay_num"></td>
+        <td class="etiqueta">Brocados</td>
+        <td><input type="text" id="broc_num"></td>
+        <td class="etiqueta">0</td>
+        <td><input type="text" id="g0"></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Negro parcial</td>
+        <td><input type="text" id="negpar_num"></td>
+        <td class="etiqueta">Brocas punto</td>
+        <td><input type="text" id="brocas_num"></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Vinagre parcial</td>
+        <td><input type="text" id="vinpar_num"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Cardenillo parcial</td>
+        <td><input type="text" id="cardpar_num"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      <!-- Observación -->
+      <tr>
+        <td class="etiqueta">Observación:</td>
+        <td colspan="5"><input type="text" id="observacion"></td>
+      </tr>
+    </table>
+
+    <div class="acciones">
+      <button onclick="descargarExcel()">Guardar ficha (Excel)</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  // Base de datos de ejemplo: cada lote se identifica por el código
+  // usado en el buscador (ej: "0001") y contiene los valores de su ficha.
+  const basesDeDatos = {
+    "0001": {
+      fecha: "",
+      numeroLote: "1977",
+      faltas: "12.6",
+      noMuestra: "Bx75",
+      neg_num: "",
+      rojo_num: "",
+      vin_num: "2",
+      mant_num: "",
+      repo_num: "",
+      card_num: "",
+      piedras_num: "",
+      guay_num: "",
+      negpar_num: "2",
+      vinpar_num: "6",
+      cardpar_num: "",
+      part_num: "14",
+      pasilla_num: "3",
+      concha_num: "",
+      blanco_num: "4",
+      aplas_num: "",
+      vano_num: "3",
+      aver_num: "",
+      broc_num: "2",
+      brocas_num: "20",
+      g18: "",
+      g17: "34.2",
+      g16: "25",
+      g15: "11.7",
+      g14: "1.7",
+      g13: "0.2",
+      g12: "",
+      g0: "",
+      observacion: "1.4% bajo M15"
+    }
+  };
+
+  // Relación entre los nombres de campo guardados desde
+  // "Agregar Información" (localStorage) y los ids de esta tabla.
+  const mapaCampos = {
+    g1_negro: 'neg_num',
+    g1_rojo: 'rojo_num',
+    g1_vinagre: 'vin_num',
+    g1_mantequillo: 'mant_num',
+    g1_reposado: 'repo_num',
+    g1_cardenillo: 'card_num',
+    g1_piedras: 'piedras_num',
+    g1_guayaba: 'guay_num',
+    g1_negroparcial: 'negpar_num',
+    g1_vinagreparcial: 'vinpar_num',
+    g1_cardenilloparcial: 'cardpar_num',
+    g2_partidos: 'part_num',
+    g2_pasilla: 'pasilla_num',
+    g2_concha: 'concha_num',
+    g2_blanco: 'blanco_num',
+    g2_aplastados: 'aplas_num',
+    g2_vano: 'vano_num',
+    g2_averanado: 'aver_num',
+    g2_brocados: 'broc_num',
+    g2_brocaspunto: 'brocas_num',
+    malla_18: 'g18',
+    malla_17: 'g17',
+    malla_16: 'g16',
+    malla_15: 'g15',
+    malla_14: 'g14',
+    malla_13: 'g13',
+    malla_12: 'g12',
+    malla_0: 'g0'
+  };
+
+  // Precarga los datos del lote si viene en la URL (?lote=0001)
+  window.addEventListener('DOMContentLoaded', function() {
+    const parametros = new URLSearchParams(window.location.search);
+    const lote = parametros.get('lote');
+
+    if (!lote) return;
+
+    // 1) Primero busca en los lotes guardados desde "Agregar Información"
+    const lotesGuardados = JSON.parse(localStorage.getItem('lotesGuardados') || '{}');
+    const datosGuardados = lotesGuardados[lote];
+
+    if (datosGuardados) {
+      document.getElementById('numeroLote').value = lote;
+
+      if (datosGuardados.fecha) {
+        document.getElementById('fecha').value = datosGuardados.fecha;
+      }
+
+      if (datosGuardados.muestra) {
+        document.getElementById('noMuestra').value = datosGuardados.muestra;
+      }
+
+      Object.keys(mapaCampos).forEach(function(campoGuardado) {
+        const idTabla = mapaCampos[campoGuardado];
+        const input = document.getElementById(idTabla);
+        if (input && datosGuardados[campoGuardado]) {
+          input.value = datosGuardados[campoGuardado];
+        }
+      });
+      return;
+    }
+
+    // 2) Si no está en los lotes guardados, revisa la base de datos de ejemplo
+    if (basesDeDatos[lote]) {
+      const datos = basesDeDatos[lote];
+      Object.keys(datos).forEach(function(campoId) {
+        const input = document.getElementById(campoId);
+        if (input) input.value = datos[campoId];
+      });
+    } else {
+      // Si tampoco existe ahí, al menos deja el número escrito,
+      // para crear una ficha nueva.
+      document.getElementById('numeroLote').value = lote;
+    }
+  });
+
+  function descargarExcel() {
+    // Clona la tabla y reemplaza cada input por su valor como texto,
+    // para que SheetJS pueda leer los datos escritos.
+    const tablaOriginal = document.getElementById('tablaFicha');
+    const clon = tablaOriginal.cloneNode(true);
+
+    clon.querySelectorAll('input').forEach(function(input) {
+      const texto = document.createTextNode(input.value);
+      input.parentNode.replaceChild(texto, input);
+    });
+
+    const hoja = XLSX.utils.table_to_sheet(clon);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Ficha de lote');
+
+    const numeroLote = document.getElementById('numeroLote').value.trim();
+    const nombreArchivo = numeroLote
+      ? 'ficha-lote-' + numeroLote + '.xlsx'
+      : 'ficha-lote.xlsx';
+
+    XLSX.writeFile(libro, nombreArchivo);
+  }
+</script>
+
+</body>
+</html>
