@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscar Lote</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f9;
+    margin: 0;
+    padding: 24px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .card {
+    background: #fff;
+    padding: 32px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 320px;
+    text-align: center;
+  }
+  h2 {
+    margin-top: 0;
+    color: #333;
+  }
+  label {
+    display: block;
+    margin-top: 16px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #555;
+    text-align: left;
+  }
+  input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+  }
+  button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 10px;
+    background: #4A90E2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #357ABD;
+  }
+  .volver {
+    display: block;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #888;
+    text-decoration: none;
+  }
+  .volver:hover {
+    text-decoration: underline;
+  }
+
+  /* Resultado de la búsqueda */
+  #noEncontrado {
+    text-align: center;
+    color: #c0392b;
+    margin-top: 20px;
+    display: none;
+  }
+  .ficha {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 700px;
+    display: none;
+    overflow-x: auto;
+  }
+  table.resultado {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+  }
+  table.resultado td, table.resultado th {
+    border: 1px solid #999;
+    padding: 5px 8px;
+  }
+  table.resultado th {
+    background: #B0B0B0;
+    color: white;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  table.resultado .etiqueta {
+    background: #eef4fc;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Buscar Lote o Producto</h2>
+  <form id="formBuscar">
+    <label for="lote">Número de lote</label>
+    <input type="text" id="lote" placeholder="Ej: 1977" autofocus>
+    <button type="submit">Buscar</button>
+  </form>
+  <a class="volver" href="inicio.html">← Volver al inicio</a>
+</div>
+
+<div id="noEncontrado">No se encontró información guardada para ese lote.</div>
+
+<div class="ficha" id="ficha">
+  <table class="resultado">
+    <tr>
+      <td class="etiqueta" style="width:40%;">Número de lote</td>
+      <td id="v_lote"></td>
+    </tr>
+    <tr>
+      <td class="etiqueta">No. Muestra</td>
+      <td id="v_muestra"></td>
+    </tr>
+  </table>
+
+  <table class="resultado" style="margin-top:14px;">
+    <tr>
+      <th>Primer grupo</th>
+      <th></th>
+      <th>Segundo grupo</th>
+      <th></th>
+    </tr>
+    <tr><td class="etiqueta">Negro</td><td id="v_g1_negro"></td><td class="etiqueta">Partidos</td><td id="v_g2_partidos"></td></tr>
+    <tr><td class="etiqueta">Rojo</td><td id="v_g1_rojo"></td><td class="etiqueta">Pasilla máquinas</td><td id="v_g2_pasilla"></td></tr>
+    <tr><td class="etiqueta">Vinagre</td><td id="v_g1_vinagre"></td><td class="etiqueta">Concha</td><td id="v_g2_concha"></td></tr>
+    <tr><td class="etiqueta">Mantequillo</td><td id="v_g1_mantequillo"></td><td class="etiqueta">Blanco decolorado</td><td id="v_g2_blanco"></td></tr>
+    <tr><td class="etiqueta">Reposado</td><td id="v_g1_reposado"></td><td class="etiqueta">Aplastados</td><td id="v_g2_aplastados"></td></tr>
+    <tr><td class="etiqueta">Cardenillo</td><td id="v_g1_cardenillo"></td><td class="etiqueta">Vano Balsudos</td><td id="v_g2_vano"></td></tr>
+    <tr><td class="etiqueta">Piedras, palos, otro</td><td id="v_g1_piedras"></td><td class="etiqueta">Averanado arrugado</td><td id="v_g2_averanado"></td></tr>
+    <tr><td class="etiqueta">Guayaba</td><td id="v_g1_guayaba"></td><td class="etiqueta">Brocados</td><td id="v_g2_brocados"></td></tr>
+    <tr><td class="etiqueta">Negro parcial</td><td id="v_g1_negroparcial"></td><td class="etiqueta">Brocas punto</td><td id="v_g2_brocaspunto"></td></tr>
+    <tr><td class="etiqueta">Vinagre parcial</td><td id="v_g1_vinagreparcial"></td><td></td><td></td></tr>
+    <tr><td class="etiqueta">Cardenillo parcial</td><td id="v_g1_cardenilloparcial"></td><td></td><td></td></tr>
+  </table>
+
+  <table class="resultado" style="margin-top:14px;">
+    <tr><th colspan="2">Granulometría</th></tr>
+    <tr><td class="etiqueta" style="width:50%;">18</td><td id="v_malla_18"></td></tr>
+    <tr><td class="etiqueta">17</td><td id="v_malla_17"></td></tr>
+    <tr><td class="etiqueta">16</td><td id="v_malla_16"></td></tr>
+    <tr><td class="etiqueta">15</td><td id="v_malla_15"></td></tr>
+    <tr><td class="etiqueta">14</td><td id="v_malla_14"></td></tr>
+    <tr><td class="etiqueta">13</td><td id="v_malla_13"></td></tr>
+    <tr><td class="etiqueta">12</td><td id="v_malla_12"></td></tr>
+    <tr><td class="etiqueta">0</td><td id="v_malla_0"></td></tr>
+  </table>
+</div>
+
+<script>
+  document.getElementById('formBuscar').addEventListener('submit', function(e) {
+    e.preventDefault();
+    buscarLote();
+  });
+
+  function buscarLote() {
+    const lote = document.getElementById('lote').value.trim();
+    const fichaDiv = document.getElementById('ficha');
+    const noEncontrado = document.getElementById('noEncontrado');
+
+    if (!lote) {
+      fichaDiv.style.display = 'none';
+      noEncontrado.style.display = 'none';
+      return;
+    }
+
+    // Busca en los lotes guardados desde "Agregar Información"
+    const lotesGuardados = JSON.parse(localStorage.getItem('lotesGuardados') || '{}');
+    const datos = lotesGuardados[lote];
+
+    if (!datos) {
+      fichaDiv.style.display = 'none';
+      noEncontrado.style.display = 'block';
+      return;
+    }
+
+    noEncontrado.style.display = 'none';
+    fichaDiv.style.display = 'block';
+
+    document.getElementById('v_lote').textContent = lote;
+    document.getElementById('v_muestra').textContent = datos.muestra || '';
+
+    const campos = [
+      'g1_negro','g1_rojo','g1_vinagre','g1_mantequillo','g1_reposado',
+      'g1_cardenillo','g1_piedras','g1_guayaba','g1_negroparcial',
+      'g1_vinagreparcial','g1_cardenilloparcial',
+      'g2_partidos','g2_pasilla','g2_concha','g2_blanco','g2_aplastados',
+      'g2_vano','g2_averanado','g2_brocados','g2_brocaspunto',
+      'malla_18','malla_17','malla_16','malla_15','malla_14',
+      'malla_13','malla_12','malla_0'
+    ];
+
+    campos.forEach(function(id) {
+      const celda = document.getElementById('v_' + id);
+      if (celda) celda.textContent = datos[id] || '';
+    });
+  }
+</script>
+
+</body>
+</html>
