@@ -60,16 +60,6 @@
     text-align: center;
     font-size: 14px;
   }
-  .link {
-    display: block;
-    margin-top: 16px;
-    text-align: center;
-    font-size: 13px;
-  }
-  .link a {
-    color: #4A90E2;
-    text-decoration: none;
-  }
 </style>
 </head>
 <body>
@@ -89,23 +79,14 @@
     <button type="submit">Crear usuario</button>
     <div id="mensaje"></div>
   </form>
-  <span class="link">¿Ya tienes cuenta? <a href="login.html">Inicia sesión aquí</a></span>
 </div>
 
 <script>
-  // NOTA: esto guarda el usuario en localStorage (memoria del navegador),
-  // por lo que solo funciona en el mismo navegador/dispositivo donde te
-  // registraste. No es una base de datos real ni segura. Para producción
-  // necesitas un backend (Node.js, PHP, Firebase, etc.).
+  // NOTA: esto guarda el usuario solo en memoria del navegador (variable JS),
+  // no es una base de datos real. Para producción necesitas un backend
+  // (Node.js, PHP, Firebase, etc.) que guarde los datos de forma segura.
 
-  function obtenerUsuarios() {
-    const datos = localStorage.getItem('usuariosRegistrados');
-    return datos ? JSON.parse(datos) : [];
-  }
-
-  function guardarUsuarios(usuarios) {
-    localStorage.setItem('usuariosRegistrados', JSON.stringify(usuarios));
-  }
+  const usuariosRegistrados = [];
 
   document.getElementById('formRegistro').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -121,19 +102,16 @@
       return;
     }
 
-    const usuarios = obtenerUsuarios();
-    const existe = usuarios.find(u => u.usuario === usuario);
+    const existe = usuariosRegistrados.find(u => u.usuario === usuario);
     if (existe) {
       mensaje.style.color = 'red';
       mensaje.textContent = 'Ese usuario ya existe.';
       return;
     }
 
-    usuarios.push({ usuario, password });
-    guardarUsuarios(usuarios);
-
+    usuariosRegistrados.push({ usuario, password });
     mensaje.style.color = 'green';
-    mensaje.textContent = '¡Usuario creado con éxito! Ya puedes iniciar sesión.';
+    mensaje.textContent = '¡Usuario creado con éxito!';
     document.getElementById('formRegistro').reset();
   });
 </script>
