@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscar Lote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #4A90E2;
+    --azul-oscuro: #2f6fc4;
+    --gris-texto: #4a4f57;
+    --gris-borde: #d7dbe2;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(180deg, #eef1f8 0%, #f4f4f9 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    color: var(--gris-texto);
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    background: #fff;
+    padding: 36px 32px;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(30, 41, 59, 0.12);
+    border: 1px solid rgba(0,0,0,0.04);
+    width: 340px;
+    text-align: center;
+  }
+  h2 {
+    margin: 0 0 4px 0;
+    color: #1f2430;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .subtitulo {
+    margin: 0 0 22px 0;
+    font-size: 13px;
+    color: #8a90a0;
+    font-weight: 500;
+  }
+  label {
+    display: block;
+    margin-top: 18px;
+    margin-bottom: 7px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #5b6070;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 14.5px;
+    color: #1f2430;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  input:focus {
+    outline: none;
+    border-color: var(--azul);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+  }
+  /* ==== Menú desplegable con look profesional ==== */
+  .select-envoltura {
+    position: relative;
+  }
+  select {
+    width: 100%;
+    padding: 11px 38px 11px 12px;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: #1f2430;
+    background-color: #fbfbfd;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  select:hover {
+    border-color: #b7c2d6;
+  }
+  select:focus {
+    outline: none;
+    border-color: var(--azul);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+  }
+  .select-envoltura::after {
+    content: '';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid #7a8194;
+    border-bottom: 2px solid #7a8194;
+    transform: translateY(-65%) rotate(45deg);
+    pointer-events: none;
+  }
+  button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 12px;
+    background: var(--azul);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.32);
+    transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  }
+  button:hover {
+    background: var(--azul-oscuro);
+    box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+  }
+  button:active {
+    transform: translateY(1px);
+  }
+  .volver {
+    display: block;
+    margin-top: 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #8a90a0;
+    text-decoration: none;
+  }
+  .volver:hover {
+    color: var(--azul-oscuro);
+    text-decoration: underline;
+  }
+  /* ==== Botón desplegable "Periodo de tiempo" ==== */
+  .boton-periodo {
+    width: 100%;
+    margin-top: 18px;
+    padding: 11px 14px;
+    background: #fbfbfd;
+    color: #4a4f57;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .boton-periodo:hover {
+    border-color: var(--azul);
+    background: #f3f7fd;
+  }
+  .flecha-periodo {
+    font-size: 12px;
+    color: #8a90a0;
+    transition: transform 0.2s ease;
+  }
+  .boton-periodo.abierto .flecha-periodo {
+    transform: rotate(180deg);
+  }
+  #contenedorPeriodo {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+  }
+  #contenedorPeriodo.abierto {
+    max-height: 220px;
+  }
+  .contenedor-periodo-interior {
+    padding-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Buscar Lote o Producto</h2>
+  <p class="subtitulo">Consulta las fichas de análisis registradas</p>
+  <form id="formBuscar">
+    <label for="tipoBusqueda">¿Qué deseas consultar?</label>
+    <div class="select-envoltura">
+      <select id="tipoBusqueda">
+        <option value="lote">Buscar por número de lote</option>
+        <option value="EP 05">EP 05</option>
+        <option value="Malla 14">Malla 14</option>
+        <option value="Consumo">Consumo</option>
+        <option value="Recuperado">Recuperado</option>
+        <option value="Supremo">Supremo</option>
+        <option value="Aliadas">Aliadas</option>
+      </select>
+    </div>
+
+    <div id="contenedorLote">
+      <label for="lote">Número de lote</label>
+      <input type="text" id="lote" placeholder="Ej: 1977" autofocus>
+    </div>
+
+    <button type="button" id="botonTogglePeriodo" class="boton-periodo">
+      <span>📅 Periodo de tiempo</span>
+      <span class="flecha-periodo">▾</span>
+    </button>
+    <div id="contenedorPeriodo">
+      <div class="contenedor-periodo-interior">
+        <label for="fechaDesde">Desde</label>
+        <input type="date" id="fechaDesde">
+        <label for="fechaHasta">Hasta</label>
+        <input type="date" id="fechaHasta">
+      </div>
+    </div>
+
+    <button type="submit">Buscar</button>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ==== Conexión con Supabase ====
+  // Misma URL y llave usadas en "Agregar Información" y "Consultar Lotes",
+  // para que las tres páginas trabajen sobre el mismo proyecto.
+  const SUPABASE_URL = 'https://eqbzvxtxvrzrbnbfhslk.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxYnp2eHR4dnJ6cmJuYmZoc2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMDE3MzQsImV4cCI6MjEwMDc3NzczNH0.2EZ84ANMel8GGOKzT_H-LOxpuqvxn-CZ4tbcPm2IPc0';
+  const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const selectTipo = document.getElementById('tipoBusqueda');
+  const contenedorLote = document.getElementById('contenedorLote');
+  const contenedorPeriodo = document.getElementById('contenedorPeriodo');
+  const inputLote = document.getElementById('lote');
+
+  function actualizarVisibilidadLote() {
+    if (selectTipo.value === 'lote') {
+      contenedorLote.style.display = 'block';
+      inputLote.focus();
+    } else {
+      contenedorLote.style.display = 'none';
+    }
+  }
+  actualizarVisibilidadLote();
+  selectTipo.addEventListener('change', actualizarVisibilidadLote);
+
+  // Botón "Periodo de tiempo": se despliega/pliega de forma independiente
+  // al menú de arriba, para elegir un rango de fechas (Desde / Hasta).
+  const botonTogglePeriodo = document.getElementById('botonTogglePeriodo');
+  botonTogglePeriodo.addEventListener('click', function() {
+    const abierto = !contenedorPeriodo.classList.contains('abierto');
+    contenedorPeriodo.classList.toggle('abierto', abierto);
+    botonTogglePeriodo.classList.toggle('abierto', abierto);
+  });
+
+  document.getElementById('formBuscar').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // Si el bloque "Periodo de tiempo" está desplegado y tiene al menos
+    // una fecha, esa búsqueda tiene prioridad sobre el menú de arriba.
+    if (contenedorPeriodo.classList.contains('abierto')) {
+      const desde = document.getElementById('fechaDesde').value;
+      const hasta = document.getElementById('fechaHasta').value;
+
+      if (desde || hasta) {
+        const params = new URLSearchParams();
+        if (desde) params.set('desde', desde);
+        if (hasta) params.set('hasta', hasta);
+        window.location.href = 'consultar-lotes.html?' + params.toString();
+        return;
+      }
+    }
+
+    const tipo = selectTipo.value;
+
+    // ==== Caso 1: buscar por número de lote (comportamiento de siempre) ====
+    if (tipo === 'lote') {
+      const lote = inputLote.value.trim();
+
+      if (!lote) {
+        window.location.href = 'consultar-lotes.html';
+        return;
+      }
+
+      // Verifica en Supabase si ese lote ya existe, para avisar antes de
+      // entrar a la ficha (por si el usuario tecleó mal el número).
+      try {
+        const { data, error } = await clienteSupabase
+          .from('lotes')
+          .select('lote')
+          .eq('lote', lote)
+          .maybeSingle();
+
+        if (!error && !data) {
+          const continuar = confirm('No se encontró el lote "' + lote + '" en la base de datos.\n¿Deseas abrir la ficha de todas formas para crearlo?');
+          if (!continuar) return;
+        }
+      } catch (err) {
+        console.error('No se pudo verificar el lote en Supabase:', err);
+      }
+
+      window.location.href = 'consultar-lotes.html?lote=' + encodeURIComponent(lote);
+      return;
+    }
+
+    // ==== Caso 2: EP 05 -> los últimos 5 lotes que sean números (los
+    // lotes normales de producción, no las categorías de texto) ====
+    if (tipo === 'EP 05') {
+      window.location.href = 'consultar-lotes.html?modo=ep05';
+      return;
+    }
+
+    // ==== Caso 3: el resto de los productos (Malla 14, Consumo,
+    // Recuperado, Supremo) -> las últimas 5 fichas guardadas con ese
+    // texto en "número de lote" ====
+    window.location.href = 'consultar-lotes.html?categoria=' + encodeURIComponent(tipo);
+  });
+</script>
+
+</body>
+</html>
