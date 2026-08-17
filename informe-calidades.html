@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Informe de Calidades — vista HTML</title>
+<style>
+  :root {
+    --azul-g1: #B9CDE5;
+    --menta-g1-parcial: #E8F8EF;
+    --durazno-g2: #FDF0E3;
+    --azul-muestra: #CBDCF2;
+    --texto-etiqueta: #1F2430;
+    --borde: #000000;
+    --borde-grueso: #000000;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: #ffffff;
+    font-family: Calibri, "Segoe UI", Arial, sans-serif;
+    color: #222;
+    margin: 0;
+    padding: 32px 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow-x: hidden;
+  }
+
+  /* Carril de desplazamiento lateral: aquí adentro es donde se hace scroll
+     horizontal. Su ancho nunca invade el espacio de los botones fijos de
+     la derecha, así que las flechas y la lupa jamás quedan sobre la tabla,
+     sin importar cuánto te desplaces hacia los lados. */
+  .scroll-horizontal {
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+    margin: 0 90px 0 24px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scroll-horizontal::-webkit-scrollbar {
+    display: none;
+    height: 0;
+  }
+
+  h1 {
+    font-size: 26px;
+    margin: 0 0 4px;
+    text-align: center;
+  }
+
+  .subtitulo {
+    color: #666;
+    font-size: 15px;
+    margin: 0 0 20px;
+    text-align: center;
+  }
+
+  .contenedor-principal {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .lote-envoltura {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    padding: 14px;
+    margin-bottom: 22px;
+    box-sizing: border-box;
+  }
+
+  .lote-header {
+    font-weight: bold;
+    font-size: 24px;
+    text-align: center;
+    padding: 8px 24px;
+    box-sizing: border-box;
+  }
+
+  .cuadricula {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    gap: 28px 40px;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+
+  /* Envoltorio de cada ficha: bordes bien redondeados y sombra suave,
+     sin tocar ni los colores ni el contenido de la tabla de adentro.
+     La sombra y el radio van en este contenedor (sin overflow:hidden,
+     para que la sombra nunca se recorte); el recorte de las esquinas
+     de la tabla lo hace el div interior .ficha-interior. */
+  .ficha-envoltura {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
+
+  .ficha-interior {
+    border-radius: 16px;
+    overflow: hidden;
+    padding: 14px;
+  }
+
+  table.ficha {
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  table.ficha col.label   { width: 110px; }
+  table.ficha col.valor   { width: 72px; }
+  table.ficha col.malla-l { width: 84px; }
+  table.ficha col.malla-v { width: 84px; }
+
+  table.ficha td {
+    border: 1px solid var(--borde);
+    height: 30px;
+    padding: 4px 8px;
+    font-size: 17px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  table.ficha td.vacia { border: 1px solid var(--borde); }
+
+  /* Encabezado con el nombre de la muestra */
+  td.muestra {
+    background: var(--azul-muestra);
+    font-weight: bold;
+    border: 2px solid var(--borde-grueso);
+  }
+
+  /* Grupo 1 */
+  td.g1 {
+    background: var(--azul-g1);
+    color: var(--texto-etiqueta);
+    font-weight: bold;
+  }
+
+  /* Grupo 1 - campos "parcial" */
+  td.g1-parcial {
+    background: var(--menta-g1-parcial);
+    color: var(--texto-etiqueta);
+    font-weight: bold;
+  }
+
+  /* Grupo 2 */
+  td.g2 {
+    background: var(--durazno-g2);
+    color: var(--texto-etiqueta);
+    font-weight: bold;
+  }
+
+  /* Valores numéricos: sin negrita, sin color de relleno */
+  td.valor {
+    font-weight: normal;
+    background: #ffffff;
+  }
+
+  /* Encabezado de Granulometría */
+  td.granulometria-header {
+    font-weight: bold;
+    background: #ffffff;
+  }
+
+  td.malla-label {
+    font-weight: bold;
+    background: #ffffff;
+  }
+
+  td.malla-valor {
+    font-weight: normal;
+    background: #ffffff;
+  }
+
+  /* Filas G1 / G2 (peso), sin color de fondo */
+  td.peso-label {
+    font-weight: bold;
+    background: #ffffff;
+  }
+  td.peso-valor {
+    font-weight: bold;
+    background: #ffffff;
+  }
+
+  /* FALTAS: en negrita, sin ningún color de relleno */
+  td.faltas-label,
+  td.faltas-valor {
+    font-weight: bold;
+    background: #ffffff;
+  }
+
+  /* Íconos fijos a la derecha, centrados horizontalmente en la franja reservada */
+  .navegacion-vertical {
+    position: fixed;
+    right: 24px;
+    bottom: 90px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 20;
+  }
+
+  .navegacion-vertical button {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: none;
+    background: #2c5aa0;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+  }
+
+  .navegacion-vertical button:hover {
+    background: #3d7dc0;
+  }
+
+  .navegacion-vertical svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Botón de lupa: mismo estilo que las flechas, se agrega debajo de ellas */
+  .btn-lupa {
+    position: relative;
+  }
+
+  .btn-lupa.activo {
+    background: #3d7dc0;
+  }
+
+  /* Barra lateral de zoom: aparece junto al botón de lupa al presionarlo */
+  .panel-zoom {
+    position: fixed;
+    right: 78px;
+    bottom: 150px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    padding: 10px 16px;
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    z-index: 25;
+  }
+
+  .panel-zoom.visible {
+    display: flex;
+  }
+
+  .panel-zoom .zoom-etiqueta {
+    font-size: 11px;
+    font-weight: bold;
+    color: #2c5aa0;
+    font-family: Calibri, "Segoe UI", Arial, sans-serif;
+  }
+
+  .panel-zoom input[type="range"] {
+    width: 140px;
+    height: 6px;
+    accent-color: #2c5aa0;
+    cursor: pointer;
+  }
+
+  .panel-zoom .zoom-valor {
+    font-size: 13px;
+    font-weight: bold;
+    color: #2c5aa0;
+    font-family: Calibri, "Segoe UI", Arial, sans-serif;
+    min-width: 34px;
+    text-align: center;
+  }
+
+  /* Botón de buscador de lotes: mismo estilo, va debajo del zoom */
+  .btn-buscar {
+    position: relative;
+  }
+
+  .btn-buscar.activo {
+    background: #3d7dc0;
+  }
+
+  /* Fondo oscuro detrás de la ventana flotante de búsqueda */
+  .overlay-buscar {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 30, 45, 0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+  }
+
+  .overlay-buscar.visible {
+    display: flex;
+  }
+
+  /* Ventana flotante de búsqueda */
+  .panel-buscar {
+    position: relative;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.28);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 320px;
+    max-width: 90vw;
+  }
+
+  .panel-buscar-titulo {
+    font-size: 16px;
+    font-weight: bold;
+    color: #2c5aa0;
+    font-family: Calibri, "Segoe UI", Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .btn-cerrar-buscar {
+    border: none;
+    background: transparent;
+    font-size: 22px;
+    line-height: 1;
+    color: #888;
+    cursor: pointer;
+    padding: 0 2px;
+  }
+
+  .btn-cerrar-buscar:hover {
+    color: #2c5aa0;
+  }
+
+  .panel-buscar-fila {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-buscar input[type="text"] {
+    flex: 1;
+    height: 36px;
+    border: 1px solid #cfd8e3;
+    border-radius: 8px;
+    padding: 0 10px;
+    font-size: 14px;
+    font-family: Calibri, "Segoe UI", Arial, sans-serif;
+    outline: none;
+  }
+
+  .panel-buscar input[type="text"]:focus {
+    border-color: #2c5aa0;
+  }
+
+  .btn-ejecutar-buscar {
+    height: 36px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 8px;
+    background: #2c5aa0;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: Calibri, "Segoe UI", Arial, sans-serif;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .btn-ejecutar-buscar:hover {
+    background: #3d7dc0;
+  }
+
+  .panel-buscar .buscar-info {
+    font-size: 12px;
+    font-weight: bold;
+    color: #2c5aa0;
+    font-family: Calibri, "Segoe UI", Arial, sans-serif;
+  }
+
+  /* Ficha oculta cuando no coincide con la búsqueda */
+  .ficha-envoltura.oculta,
+  .lote-envoltura.oculta,
+  .grupo-lote.oculta {
+    display: none;
+  }
+
+  /* Envuelve el encabezado "LOTE XXXX" junto con su cuadrícula de
+     fichas, para poder mostrar/ocultar un lote completo de una sola
+     vez al buscar. */
+  .grupo-lote {
+    width: 100%;
+  }
+
+  /* Texto de estado (cargando / cantidad de muestras encontradas /
+     sin resultados), arriba de las fichas. */
+  .estado-informe {
+    color: #666;
+    font-size: 14px;
+    text-align: center;
+    margin: 0 24px 18px;
+    font-family: Calibri, "Segoe UI", Arial, sans-serif;
+  }
+
+  .mensaje-vacio {
+    color: #888;
+    font-size: 15px;
+    text-align: center;
+    margin: 40px 24px;
+    font-family: Calibri, "Segoe UI", Arial, sans-serif;
+  }
+</style>
+</head>
+<body>
+
+  <p class="estado-informe" id="estadoInforme">Cargando información...</p>
+
+  <div class="scroll-horizontal">
+  <div class="contenedor-principal" id="contenedorPrincipal">
+  </div>
+  </div>
+
+
+  <div class="navegacion-vertical">
+    <button type="button" id="btnLoteAnterior" title="Lote anterior" onclick="loteAnterior()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 5 5 12 12 19"></polyline></svg>
+    </button>
+    <button type="button" id="btnLoteSiguiente" title="Lote siguiente" onclick="loteSiguiente()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+    </button>
+    <button type="button" id="btnLupa" class="btn-lupa" title="Zoom">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+    </button>
+    <button type="button" id="btnBuscar" class="btn-buscar" title="Buscar lote">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    </button>
+  </div>
+
+  <div class="panel-zoom" id="panelZoom">
+    <span class="zoom-etiqueta">ZOOM</span>
+    <input type="range" id="sliderZoom" min="0" max="100" step="5" value="100">
+    <span class="zoom-valor" id="zoomValor">100%</span>
+  </div>
+
+  <div class="overlay-buscar" id="overlayBuscar">
+    <div class="panel-buscar" id="panelBuscar">
+      <div class="panel-buscar-titulo">
+        Buscar lote
+        <button type="button" id="btnCerrarBuscar" class="btn-cerrar-buscar" title="Cerrar" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="panel-buscar-fila">
+        <input type="text" id="inputBuscar" placeholder="Ej: LOTE 4521 o 4521...">
+        <button type="button" id="btnEjecutarBuscar" class="btn-ejecutar-buscar">Buscar</button>
+      </div>
+      <span class="buscar-info" id="buscarInfo"></span>
+    </div>
+  </div>
+
+  <script>
+    // ==== Datos ====
+    // Esta página YA NO se conecta a Supabase: muestra exactamente las
+    // fichas que estaban en pantalla en "Consultar Lotes" en el momento
+    // en que se presionó el botón "Calidades". Esos datos se guardan en
+    // localStorage (misma información, sin recalcular ni volver a
+    // consultar nada) y aquí solo se leen y se dibujan.
+    const CLAVE_LOCALSTORAGE = 'informeCalidadesDatos';
+
+    // Mismos grupos y etiquetas abreviadas que usa "Consultar Lotes",
+    // para que el orden y los nombres de cada grano queden idénticos.
+    const GRUPO1 = [
+      ['g1_negro'], ['g1_rojo'], ['g1_vinagre'], ['g1_mantequillo'], ['g1_reposado'],
+      ['g1_cardenillo'], ['g1_piedras'], ['g1_guayaba'],
+      ['g1_negroparcial'], ['g1_vinagreparcial'], ['g1_cardenilloparcial']
+    ];
+    const GRUPO2 = [
+      ['g2_partidos'], ['g2_pasilla'], ['g2_concha'], ['g2_blanco'], ['g2_aplastados'],
+      ['g2_vano'], ['g2_averanado'], ['g2_brocados'], ['g2_brocaspunto']
+    ];
+    const MALLA = [
+      ['malla_18'], ['malla_17'], ['malla_16'], ['malla_15'],
+      ['malla_14'], ['malla_13'], ['malla_12'], ['malla_0']
+    ];
+    const ETIQUETAS_GRANO = {
+      g1_negro: 'Ng', g1_rojo: 'Rj', g1_vinagre: 'Vin', g1_mantequillo: 'Mnt',
+      g1_reposado: 'Rep', g1_cardenillo: 'Crd', g1_piedras: 'P/P/O', g1_guayaba: 'Gy',
+      g1_negroparcial: 'Ng.P', g1_vinagreparcial: 'Vin.P', g1_cardenilloparcial: 'Crd.P',
+      g2_partidos: 'Part', g2_pasilla: 'Pas', g2_concha: 'Cnch', g2_blanco: 'Bl.Dec',
+      g2_aplastados: 'Apl', g2_vano: 'Vano', g2_averanado: 'Aver', g2_brocados: 'Broc',
+      g2_brocaspunto: 'BRP'
+    };
+    const ETIQUETAS_MALLA = {
+      malla_18: '18', malla_17: '17', malla_16: '16', malla_15: '15',
+      malla_14: '14', malla_13: '13', malla_12: '12', malla_0: '0'
+    };
+
+    // Lee un campo de la ficha tal cual llegó (el mismo valor que se veía
+    // en pantalla en "Consultar Lotes", ya formateado: mallas ya
+    // divididas si correspondía, Humedad/1G/2G con su sufijo, etc.).
+    function val(ficha, campo) {
+      const v = ficha[campo];
+      return (v === undefined || v === null) ? '' : String(v).trim();
+    }
+
+    // Quita el símbolo % o la letra "g" que "Consultar Lotes" agrega a
+    // 1G/2G en pantalla, para mostrar aquí un número limpio.
+    function quitarSufijo(texto) {
+      return (texto || '').toString().trim().replace(/%$/, '').replace(/[gG]$/, '').trim();
+    }
+
+    function escaparHTML(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto === undefined || texto === null ? '' : String(texto);
+      return div.innerHTML;
+    }
+
+    // Compara dos valores de lote de menor a mayor (numérico si ambos lo
+    // son; si no, alfabético), igual que en "Consultar Lotes".
+    function compararLotesAscendente(loteA, loteB) {
+      const numA = parseFloat((loteA || '').toString().trim().replace(',', '.'));
+      const numB = parseFloat((loteB || '').toString().trim().replace(',', '.'));
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return (loteA || '').toString().trim().localeCompare((loteB || '').toString().trim(), 'es', { numeric: true, sensitivity: 'base' });
+    }
+
+    // Construye la "tarjeta" HTML de una muestra (misma tabla de
+    // siempre), mostrando SOLO los granos y mallas que tienen valor en
+    // esa ficha, con el mismo layout de "Consultar Lotes": granos
+    // (Grupo 1 y luego Grupo 2) en la columna izquierda, Granulometría
+    // en la derecha, seguido de "G1=", "G2=" y FALTAS. Los valores se
+    // muestran tal cual llegaron (sin recalcular nada).
+    function crearTarjetaFicha(ficha) {
+      const presentG1 = GRUPO1.filter(function(item) { return val(ficha, item[0]) !== ''; });
+      const presentG2 = GRUPO2.filter(function(item) { return val(ficha, item[0]) !== ''; });
+      const presentMalla = MALLA.filter(function(item) { return val(ficha, item[0]) !== ''; });
+
+      const nG1 = presentG1.length;
+      const nG2 = presentG2.length;
+      const nMalla = presentMalla.length;
+      const filasGranulometria = nMalla > 0 ? 1 + nMalla : 0;
+      const filasCuerpo = Math.max(nG1 + nG2, filasGranulometria);
+
+      const pesoG1 = quitarSufijo(val(ficha, 'valor_1g'));
+      const pesoG2 = quitarSufijo(val(ficha, 'valor_2g'));
+
+      let filasHTML = '';
+      for (let i = 0; i < filasCuerpo; i++) {
+        let labelHTML, valorHTML;
+        if (i < nG1) {
+          const item = presentG1[i];
+          const esParcial = item[0].indexOf('parcial') !== -1;
+          labelHTML = '<td class="' + (esParcial ? 'g1-parcial' : 'g1') + '">' + escaparHTML(ETIQUETAS_GRANO[item[0]] || item[0]) + '</td>';
+          valorHTML = '<td class="valor">' + escaparHTML(val(ficha, item[0])) + '</td>';
+        } else if (i - nG1 < nG2) {
+          const item = presentG2[i - nG1];
+          labelHTML = '<td class="g2">' + escaparHTML(ETIQUETAS_GRANO[item[0]] || item[0]) + '</td>';
+          valorHTML = '<td class="valor">' + escaparHTML(val(ficha, item[0])) + '</td>';
+        } else {
+          labelHTML = '<td class="vacia"></td>';
+          valorHTML = '<td class="vacia"></td>';
+        }
+
+        let mallaLabelHTML, mallaValorHTML;
+        if (i === 0 && nMalla > 0) {
+          mallaLabelHTML = '<td class="granulometria-header" colspan="2">Granulometria</td>';
+          mallaValorHTML = '';
+        } else if (nMalla > 0 && (i - 1) < nMalla) {
+          const item = presentMalla[i - 1];
+          mallaLabelHTML = '<td class="malla-label">' + escaparHTML(ETIQUETAS_MALLA[item[0]] || item[0]) + '</td>';
+          mallaValorHTML = '<td class="malla-valor">' + escaparHTML(val(ficha, item[0])) + '</td>';
+        } else {
+          mallaLabelHTML = '<td class="vacia"></td>';
+          mallaValorHTML = '<td class="vacia"></td>';
+        }
+
+        filasHTML += '<tr>' + labelHTML + valorHTML + mallaLabelHTML + mallaValorHTML + '</tr>';
+      }
+
+      if (pesoG1 !== '') {
+        filasHTML += '<tr><td class="peso-label">G1</td><td class="peso-valor" colspan="3">' + escaparHTML(pesoG1) + '</td></tr>';
+      }
+      if (pesoG2 !== '') {
+        filasHTML += '<tr><td class="peso-label">G2</td><td class="peso-valor" colspan="3">' + escaparHTML(pesoG2) + '</td></tr>';
+      }
+      filasHTML += '<tr><td class="faltas-label">FALTAS</td><td class="faltas-valor" colspan="3">' + escaparHTML(val(ficha, 'faltas')) + '</td></tr>';
+
+      const envoltura = document.createElement('div');
+      envoltura.className = 'ficha-envoltura';
+      envoltura.innerHTML =
+        '<div class="ficha-interior">' +
+        '<table class="ficha">' +
+        '<colgroup><col class="label"><col class="valor"><col class="malla-l"><col class="malla-v"></colgroup>' +
+        '<tbody>' +
+        '<tr><td class="muestra" colspan="4">' + escaparHTML(ficha.muestra || '(sin nombre)') + '</td></tr>' +
+        filasHTML +
+        '</tbody></table></div>';
+      return envoltura;
+    }
+
+    // Agrupa las fichas por lote (ascendente) y arma, para cada lote, su
+    // encabezado "LOTE XXXX" seguido de la cuadrícula de tarjetas.
+    // Lista de lotes ya renderizados, en orden, para poder navegar de
+    // lote en lote con las flechas ("adelante" / "atrás").
+    let lotesElementos = [];
+    let loteActualIndice = 0;
+
+    function renderizarInforme(fichas) {
+      const contenedor = document.getElementById('contenedorPrincipal');
+      contenedor.innerHTML = '';
+      lotesElementos = [];
+      loteActualIndice = 0;
+
+      if (!fichas || fichas.length === 0) {
+        contenedor.innerHTML = '<p class="mensaje-vacio">No hay información para mostrar. Abre este informe desde el botón "Calidades" en Consultar Lotes.</p>';
+        return;
+      }
+
+      const lotesOrdenados = [];
+      const fichasPorLote = new Map();
+      fichas.forEach(function(ficha) {
+        const lote = (ficha.lote || '(sin lote)').toString();
+        if (!fichasPorLote.has(lote)) {
+          fichasPorLote.set(lote, []);
+          lotesOrdenados.push(lote);
+        }
+        fichasPorLote.get(lote).push(ficha);
+      });
+      lotesOrdenados.sort(compararLotesAscendente);
+
+      lotesOrdenados.forEach(function(lote) {
+        const grupo = document.createElement('div');
+        grupo.className = 'grupo-lote';
+
+        const loteEnvoltura = document.createElement('div');
+        loteEnvoltura.className = 'lote-envoltura';
+        loteEnvoltura.innerHTML = '<div class="lote-header">LOTE ' + escaparHTML(lote) + '</div>';
+        grupo.appendChild(loteEnvoltura);
+
+        const cuadricula = document.createElement('div');
+        cuadricula.className = 'cuadricula';
+        fichasPorLote.get(lote).forEach(function(ficha) {
+          cuadricula.appendChild(crearTarjetaFicha(ficha));
+        });
+        grupo.appendChild(cuadricula);
+
+        contenedor.appendChild(grupo);
+        lotesElementos.push({ lote: lote, elemento: grupo });
+      });
+
+      mostrarLote(0);
+    }
+
+    // Muestra solo el lote en la posición "indice" (de la lista ya
+    // ordenada) y oculta el resto. El índice da la vuelta: después del
+    // último lote vuelve al primero, y antes del primero salta al
+    // último.
+    function mostrarLote(indice) {
+      if (lotesElementos.length === 0) return;
+      const total = lotesElementos.length;
+      loteActualIndice = ((indice % total) + total) % total;
+
+      lotesElementos.forEach(function(item, i) {
+        item.elemento.classList.toggle('oculta', i !== loteActualIndice);
+      });
+
+      actualizarEstado('LOTE ' + lotesElementos[loteActualIndice].lote + ' (' + (loteActualIndice + 1) + ' de ' + total + ')');
+    }
+
+    function loteAnterior() {
+      mostrarLote(loteActualIndice - 1);
+    }
+
+    function loteSiguiente() {
+      mostrarLote(loteActualIndice + 1);
+    }
+
+    function actualizarEstado(texto) {
+      const estado = document.getElementById('estadoInforme');
+      if (estado) estado.textContent = texto;
+    }
+
+    // Lee las fichas guardadas en localStorage por "Consultar Lotes" (las
+    // que estaban en pantalla allá) y las dibuja aquí, sin consultar
+    // ninguna base de datos.
+    function cargarInforme() {
+      let datosGuardados = null;
+      try {
+        const crudo = localStorage.getItem(CLAVE_LOCALSTORAGE);
+        if (crudo) datosGuardados = JSON.parse(crudo);
+      } catch (err) {
+        console.error('No se pudo leer la información guardada:', err);
+      }
+
+      const fichas = (datosGuardados && Array.isArray(datosGuardados.fichas)) ? datosGuardados.fichas : [];
+
+      if (fichas.length === 0) {
+        actualizarEstado('No hay información para mostrar. Ábrelo desde el botón "Calidades" en Consultar Lotes.');
+        renderizarInforme([]);
+        return;
+      }
+
+      renderizarInforme(fichas);
+    }
+
+    window.addEventListener('DOMContentLoaded', cargarInforme);
+  </script>
+
+  <script>
+    (function () {
+      var btnLupa = document.getElementById('btnLupa');
+      var panelZoom = document.getElementById('panelZoom');
+      var sliderZoom = document.getElementById('sliderZoom');
+      var zoomValor = document.getElementById('zoomValor');
+      var contenido = document.querySelector('.contenedor-principal');
+
+      var btnBuscar = document.getElementById('btnBuscar');
+      var overlayBuscar = document.getElementById('overlayBuscar');
+      var panelBuscar = document.getElementById('panelBuscar');
+      var inputBuscar = document.getElementById('inputBuscar');
+      var btnEjecutarBuscar = document.getElementById('btnEjecutarBuscar');
+      var btnCerrarBuscar = document.getElementById('btnCerrarBuscar');
+      var buscarInfo = document.getElementById('buscarInfo');
+
+      btnLupa.addEventListener('click', function (e) {
+        e.stopPropagation();
+        panelZoom.classList.toggle('visible');
+        btnLupa.classList.toggle('activo');
+        cerrarBuscar();
+      });
+
+      sliderZoom.addEventListener('input', function () {
+        var valor = sliderZoom.value;
+        zoomValor.textContent = valor + '%';
+        contenido.style.zoom = (valor / 100);
+      });
+
+      function abrirBuscar() {
+        overlayBuscar.classList.add('visible');
+        btnBuscar.classList.add('activo');
+        panelZoom.classList.remove('visible');
+        btnLupa.classList.remove('activo');
+        inputBuscar.focus();
+      }
+
+      function cerrarBuscar() {
+        overlayBuscar.classList.remove('visible');
+        btnBuscar.classList.remove('activo');
+      }
+
+      function ejecutarBusqueda() {
+        // Se leen de nuevo en cada búsqueda porque las fichas se dibujan
+        // dinámicamente al cargar la página (pueden no existir todavía
+        // apenas arranca, y su cantidad de lotes varía según lo que
+        // traiga "Consultar Lotes").
+        var texto = inputBuscar.value.trim().toLowerCase();
+        var totalFichas = document.querySelectorAll('.ficha-envoltura').length;
+
+        if (texto === '') {
+          // Sin texto de búsqueda: se vuelve a la vista de un lote a la vez.
+          buscarInfo.textContent = '';
+          if (typeof mostrarLote === 'function') mostrarLote(loteActualIndice);
+          return;
+        }
+
+        var visibles = 0;
+        (typeof lotesElementos !== 'undefined' ? lotesElementos : []).forEach(function (item) {
+          var grupo = item.elemento;
+          var header = grupo.querySelector('.lote-header');
+          var loteTexto = header ? header.textContent.toLowerCase() : '';
+          var coincide = loteTexto.indexOf(texto) !== -1;
+          grupo.classList.toggle('oculta', !coincide);
+          if (coincide) visibles += grupo.querySelectorAll('.ficha-envoltura').length;
+        });
+
+        buscarInfo.textContent = (visibles === 0) ? '' : (visibles + ' de ' + totalFichas);
+      }
+
+      btnBuscar.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (overlayBuscar.classList.contains('visible')) {
+          cerrarBuscar();
+        } else {
+          abrirBuscar();
+        }
+      });
+
+      btnCerrarBuscar.addEventListener('click', function (e) {
+        e.stopPropagation();
+        cerrarBuscar();
+      });
+
+      btnEjecutarBuscar.addEventListener('click', function (e) {
+        e.stopPropagation();
+        ejecutarBusqueda();
+      });
+
+      // Búsqueda en vivo mientras se escribe
+      inputBuscar.addEventListener('input', ejecutarBusqueda);
+
+      // Enter dentro del campo también ejecuta la búsqueda
+      inputBuscar.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          ejecutarBusqueda();
+        }
+        if (e.key === 'Escape') {
+          cerrarBuscar();
+        }
+      });
+
+      // Clic en el fondo oscuro cierra la ventana flotante
+      overlayBuscar.addEventListener('click', function (e) {
+        if (e.target === overlayBuscar) {
+          cerrarBuscar();
+        }
+      });
+
+      // Cierra la barra de zoom si se hace clic afuera de ella
+      document.addEventListener('click', function (e) {
+        if (!panelZoom.contains(e.target) && e.target !== btnLupa && !btnLupa.contains(e.target)) {
+          panelZoom.classList.remove('visible');
+          btnLupa.classList.remove('activo');
+        }
+      });
+    })();
+  </script>
+
+</body>
+</html>
