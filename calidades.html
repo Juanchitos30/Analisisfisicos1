@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registro de Calidades</title>
+<style>
+  :root {
+    --azul: #2c5aa0;
+    --azul-claro: #3d7dc0;
+    --borde: #d7dde5;
+    --fondo: #f4f6f9;
+    --texto: #222;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 24px 16px 60px;
+    background: var(--fondo);
+    font-family: Calibri, "Segoe UI", Arial, sans-serif;
+    color: var(--texto);
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 24px;
+    margin: 0 0 4px;
+    color: var(--azul);
+  }
+
+  .subtitulo {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+
+  /* ------- Aviso de configuración pendiente ------- */
+  .aviso-config {
+    max-width: 900px;
+    margin: 0 auto 20px;
+    background: #fff4e5;
+    border: 1px solid #f0c37a;
+    color: #7a4a00;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    display: none;
+  }
+  .aviso-config.visible { display: block; }
+
+  /* ------- Formulario ------- */
+  .tarjeta {
+    max-width: 900px;
+    margin: 0 auto 26px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    padding: 22px;
+  }
+
+  .tarjeta h2 {
+    margin: 0 0 16px;
+    font-size: 17px;
+    color: var(--azul);
+  }
+
+  .campos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px 16px;
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .campo label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 4px;
+  }
+
+  .campo input, .campo textarea {
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 8px 9px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fbfcfe;
+  }
+
+  .campo input:focus, .campo textarea:focus {
+    outline: none;
+    border-color: var(--azul-claro);
+    background: #ffffff;
+  }
+
+  .campo.ancho-2 { grid-column: span 2; }
+
+  .acciones {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 20px;
+  }
+
+  #btnRegistrar {
+    background: var(--azul);
+    color: #fff;
+    border: none;
+    padding: 11px 26px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  #btnRegistrar:hover { background: var(--azul-claro); }
+  #btnRegistrar:disabled { background: #9fb3cc; cursor: not-allowed; }
+
+  #btnLimpiar {
+    background: none;
+    border: 1px solid var(--borde);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #555;
+  }
+
+  #estadoGuardado {
+    font-size: 13.5px;
+    font-weight: bold;
+  }
+  #estadoGuardado.ok { color: #1f8a4c; }
+  #estadoGuardado.error { color: #c0392b; }
+
+  /* ------- Tabla de registros ya guardados ------- */
+  .tarjeta-tabla {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    padding: 22px;
+  }
+
+  .tarjeta-tabla h2 {
+    margin: 0 0 14px;
+    font-size: 17px;
+    color: var(--azul);
+  }
+
+  .tabla-envoltura {
+    overflow-x: auto;
+  }
+
+  table.registros {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  table.registros th, table.registros td {
+    border: 1px solid var(--borde);
+    padding: 6px 8px;
+    text-align: center;
+  }
+
+  table.registros th {
+    background: #eef2f8;
+    color: var(--azul);
+    position: sticky;
+    top: 0;
+  }
+
+  table.registros tr:nth-child(even) td {
+    background: #fafbfd;
+  }
+
+  .mensaje-tabla {
+    color: #888;
+    font-size: 13.5px;
+    text-align: center;
+    padding: 14px 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>Registro de Calidades</h1>
+<p class="subtitulo">Los registros se guardan directamente en el Google Sheet conectado.</p>
+
+<div class="aviso-config" id="avisoConfig">
+  ⚠️ Todavía no configuraste la URL de tu Apps Script. Abre este archivo,
+  busca la línea <code>const URL_APPS_SCRIPT = ...</code> y pega ahí la
+  URL que termina en <code>/exec</code> (ver instrucciones en
+  <code>codigo-apps-script.gs</code>).
+</div>
+
+<div class="tarjeta">
+  <h2>Nuevo registro</h2>
+  <form id="formRegistro">
+    <div class="campos" id="contenedorCampos"></div>
+
+    <div class="acciones">
+      <button type="submit" id="btnRegistrar">Registrar</button>
+      <button type="button" id="btnLimpiar">Limpiar</button>
+      <span id="estadoGuardado"></span>
+    </div>
+  </form>
+</div>
+
+<div class="tarjeta-tabla">
+  <h2>Registros guardados</h2>
+  <div class="tabla-envoltura" id="contenedorTabla">
+    <p class="mensaje-tabla">Cargando registros...</p>
+  </div>
+</div>
+
+<script>
+  // =====================================================================
+  // PEGA AQUÍ LA URL DE TU IMPLEMENTACIÓN DE GOOGLE APPS SCRIPT
+  // (la que termina en /exec). Instrucciones en codigo-apps-script.gs
+  // =====================================================================
+  const URL_APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbw4ZQqHjA9RmSRZydeScveazHccYRIW-P2hTowk-YMPcqZZyqLgx3vUWjKWOk8GH0vyUw/exec';
+
+  // Columnas del formulario, en el mismo orden que en la hoja.
+  const CAMPOS = [
+    'Ubicacion', 'LETRA', 'CLIENTE O PTO', 'LOTE', 'Qty', 'PREPARACION',
+    'Obs', 'DIAS/PROD', 'FECHA', '%H', 'IGTotal', 'IG Parcial', 'II G',
+    'BRP', 'FALTAS', 'M 18', 'M 17', 'M 16', 'M 15', 'M 14', 'M 13',
+    'M 12', 'PUNT SCA', 'PERFIL', 'OBSERVACIÓN', 'Asignado', 'SALDO'
+  ];
+
+  const contenedorCampos = document.getElementById('contenedorCampos');
+  const formRegistro = document.getElementById('formRegistro');
+  const btnRegistrar = document.getElementById('btnRegistrar');
+  const btnLimpiar = document.getElementById('btnLimpiar');
+  const estadoGuardado = document.getElementById('estadoGuardado');
+  const contenedorTabla = document.getElementById('contenedorTabla');
+  const avisoConfig = document.getElementById('avisoConfig');
+
+  if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf('PEGA_AQUI') !== -1) {
+    avisoConfig.classList.add('visible');
+  }
+
+  // Arma los campos del formulario dinámicamente a partir de la lista
+  // CAMPOS, para no repetir HTML a mano por cada uno de los 27 campos.
+  CAMPOS.forEach(function (nombre) {
+    const campo = document.createElement('div');
+    campo.className = 'campo';
+    if (nombre === 'CLIENTE O PTO' || nombre === 'OBSERVACIÓN' || nombre === 'PREPARACION') {
+      campo.classList.add('ancho-2');
+    }
+
+    const label = document.createElement('label');
+    label.textContent = nombre;
+    label.setAttribute('for', 'campo_' + nombre);
+
+    const input = document.createElement('input');
+    input.type = (nombre === 'FECHA') ? 'date' : 'text';
+    input.id = 'campo_' + nombre;
+    input.name = nombre;
+    input.autocomplete = 'off';
+
+    campo.appendChild(label);
+    campo.appendChild(input);
+    contenedorCampos.appendChild(campo);
+  });
+
+  function escaparHTML(texto) {
+    return (texto === null || texto === undefined ? '' : texto.toString())
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // Pinta la tabla de registros ya guardados, usando la primera fila
+  // de la hoja como encabezado.
+  function pintarTabla(filas) {
+    if (!filas || filas.length === 0) {
+      contenedorTabla.innerHTML = '<p class="mensaje-tabla">Todavía no hay registros guardados.</p>';
+      return;
+    }
+
+    const encabezados = filas[0];
+    const cuerpo = filas.slice(1);
+
+    let html = '<table class="registros"><thead><tr>';
+    encabezados.forEach(function (encabezado) {
+      html += '<th>' + escaparHTML(encabezado) + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    // Se muestran del más reciente al más antiguo.
+    cuerpo.slice().reverse().forEach(function (fila) {
+      html += '<tr>';
+      encabezados.forEach(function (_, i) {
+        html += '<td>' + escaparHTML(fila[i]) + '</td>';
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    contenedorTabla.innerHTML = html;
+  }
+
+  function cargarRegistros() {
+    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf('PEGA_AQUI') !== -1) return;
+
+    fetch(URL_APPS_SCRIPT)
+      .then(function (respuesta) { return respuesta.json(); })
+      .then(function (datos) {
+        if (datos.ok) {
+          pintarTabla(datos.filas);
+        } else {
+          contenedorTabla.innerHTML = '<p class="mensaje-tabla">No se pudieron cargar los registros.</p>';
+        }
+      })
+      .catch(function () {
+        contenedorTabla.innerHTML = '<p class="mensaje-tabla">No se pudieron cargar los registros (revisa la conexión o la URL configurada).</p>';
+      });
+  }
+
+  formRegistro.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT.indexOf('PEGA_AQUI') !== -1) {
+      avisoConfig.classList.add('visible');
+      return;
+    }
+
+    const datos = {};
+    CAMPOS.forEach(function (nombre) {
+      datos[nombre] = document.getElementById('campo_' + nombre).value.trim();
+    });
+
+    btnRegistrar.disabled = true;
+    estadoGuardado.textContent = 'Guardando...';
+    estadoGuardado.className = '';
+
+    // Se envía como text/plain para evitar que el navegador dispare
+    // una verificación previa (preflight) que Apps Script no siempre
+    // responde bien; Apps Script igual lee el contenido como JSON.
+    fetch(URL_APPS_SCRIPT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(datos)
+    })
+      .then(function (respuesta) { return respuesta.json(); })
+      .then(function (resultado) {
+        btnRegistrar.disabled = false;
+        if (resultado.ok) {
+          estadoGuardado.textContent = 'Registrado correctamente.';
+          estadoGuardado.className = 'ok';
+          formRegistro.reset();
+          cargarRegistros();
+        } else {
+          estadoGuardado.textContent = 'Error al guardar: ' + (resultado.error || 'desconocido');
+          estadoGuardado.className = 'error';
+        }
+      })
+      .catch(function (error) {
+        btnRegistrar.disabled = false;
+        estadoGuardado.textContent = 'Error de conexión al guardar.';
+        estadoGuardado.className = 'error';
+      });
+  });
+
+  btnLimpiar.addEventListener('click', function () {
+    formRegistro.reset();
+    estadoGuardado.textContent = '';
+    estadoGuardado.className = '';
+  });
+
+  cargarRegistros();
+</script>
+</body>
+</html>
