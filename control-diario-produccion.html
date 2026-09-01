@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Diario de la Producción</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #4A90E2;
+    --azul-oscuro: #2f6fc4;
+    --navy: #24344d;
+    --navy-suave: #34495e;
+    --gris-texto: #4a4f57;
+    --gris-borde: #d7dbe2;
+    --etiqueta-fondo: #eaf1fb;
+    --etiqueta-texto: #1f3a5f;
+    --verde: #2ecc71;
+    --rojo: #e74c3c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(180deg, #eef1f8 0%, #f4f4f9 100%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding: 32px 16px;
+    color: var(--gris-texto);
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    background: #fff;
+    padding: 34px 36px;
+    border-radius: 16px;
+    box-shadow: 0 14px 36px rgba(30, 41, 59, 0.12);
+    border: 1px solid rgba(0,0,0,0.04);
+    width: 100%;
+    max-width: 620px;
+  }
+  h2 {
+    margin: 0 0 4px 0;
+    text-align: center;
+    color: #1f2430;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .subtitulo {
+    margin: 0 0 22px 0;
+    text-align: center;
+    font-size: 13px;
+    color: #8a90a0;
+    font-weight: 500;
+  }
+  label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5b6070;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  input[type="text"], input[type="date"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1f2430;
+    background: #fff;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  input[type="text"]:focus, input[type="date"]:focus {
+    outline: none;
+    border-color: var(--azul);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+  }
+  .fila-dos-columnas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 18px;
+  }
+  .campo { margin-top: 18px; }
+  .fila-dos-columnas .campo { margin-top: 0; }
+
+  /* ==== Select con flecha personalizada ==== */
+  .select-envoltura {
+    position: relative;
+  }
+  select {
+    width: 100%;
+    padding: 10px 36px 10px 12px;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2430;
+    background-color: #fbfbfd;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  select:hover { border-color: #b7c2d6; }
+  select:focus {
+    outline: none;
+    border-color: var(--azul);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+  }
+  .select-envoltura::after {
+    content: '';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid #7a8194;
+    border-bottom: 2px solid #7a8194;
+    transform: translateY(-65%) rotate(45deg);
+    pointer-events: none;
+  }
+
+  .oculto { display: none !important; }
+
+  /* ==== Lote con botón para alternar teclado ==== */
+  .fila-lote {
+    display: flex;
+    gap: 8px;
+  }
+  .fila-lote input { flex: 1; }
+  .btn-tipo-teclado {
+    padding: 0 14px;
+    background: var(--azul);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+    min-width: 46px;
+  }
+  .btn-tipo-teclado:hover { background: var(--azul-oscuro); }
+
+  /* ==== Fecha con botón "Hoy" ==== */
+  .fila-fecha {
+    display: flex;
+    gap: 8px;
+  }
+  .fila-fecha input { flex: 1; }
+  .btn-hoy {
+    padding: 0 16px;
+    background: var(--azul);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+  }
+  .btn-hoy:hover { background: var(--azul-oscuro); }
+
+  .btn-guardar {
+    width: 100%;
+    margin-top: 28px;
+    padding: 13px;
+    background: var(--azul);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.32);
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-guardar:hover {
+    background: var(--azul-oscuro);
+    box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+  }
+  .btn-guardar:disabled {
+    background: #c7ccd6;
+    cursor: default;
+    box-shadow: none;
+  }
+  #mensaje {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+
+  @media (max-width: 560px) {
+    .fila-dos-columnas {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Control Diario de la Producción</h2>
+  <p class="subtitulo">Registra la información de producción del día</p>
+
+  <form id="formProduccion">
+
+    <div class="campo">
+      <label for="lote">Número de lote</label>
+      <div class="fila-lote">
+        <input type="text" id="lote" placeholder="" inputmode="numeric" required>
+        <button type="button" id="btnTipoTecladoLote" class="btn-tipo-teclado" title="Cambiar a teclado de texto">ABC</button>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="fecha">Fecha</label>
+      <div class="fila-fecha">
+        <input type="date" id="fecha">
+        <button type="button" id="btnFechaHoy" class="btn-hoy">📅 Hoy</button>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="ubicacion">Ubicación</label>
+      <div class="select-envoltura">
+        <select id="ubicacion" required>
+          <option value="">Selecciona una opción</option>
+          <option value="A01">A01</option>
+          <option value="A02">A02</option>
+          <option value="A03">A03</option>
+          <option value="A04">A04</option>
+          <option value="A05">A05</option>
+          <option value="A06">A06</option>
+          <option value="A07">A07</option>
+          <option value="A08">A08</option>
+          <option value="A09">A09</option>
+          <option value="A10">A10</option>
+          <option value="A11">A11</option>
+          <option value="A12">A12</option>
+          <option value="B01">B01</option>
+          <option value="B02">B02</option>
+          <option value="B03">B03</option>
+          <option value="B04">B04</option>
+          <option value="B05">B05</option>
+          <option value="B06">B06</option>
+          <option value="C01">C01</option>
+          <option value="C02">C02</option>
+          <option value="C03">C03</option>
+          <option value="C04">C04</option>
+          <option value="C05">C05</option>
+          <option value="Otra">Otra</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="ubicacionOtroContenedor" class="campo oculto">
+      <label for="ubicacionOtro">Especifica la ubicación</label>
+      <input type="text" id="ubicacionOtro" placeholder="Escribe el valor">
+    </div>
+
+    <div class="campo">
+      <label for="cantidadProducida">Cantidad producida</label>
+      <div class="select-envoltura">
+        <select id="cantidadProducida" required>
+          <option value="">Selecciona una opción</option>
+          <option value="Ax75">Ax75</option>
+          <option value="Bx75">Bx75</option>
+          <option value="Cx75">Cx75</option>
+          <option value="Dx50">Dx50</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="cantidadProducidaOtroContenedor" class="campo oculto">
+      <label for="cantidadProducidaOtro">Especifica la cantidad</label>
+      <input type="text" id="cantidadProducidaOtro" placeholder="Escribe el valor">
+    </div>
+
+    <div class="campo">
+      <label for="producto">Producto</label>
+      <div class="select-envoltura">
+        <select id="producto" required>
+          <option value="">Selecciona una opción</option>
+          <option value="EP 05">EP 05</option>
+          <option value="Malla 14">Malla 14</option>
+          <option value="Consumo">Consumo</option>
+          <option value="Recuperado">Recuperado</option>
+          <option value="Supremo M18">Supremo M18</option>
+          <option value="Supremo M17">Supremo M17</option>
+          <option value="Aliadas">Aliadas</option>
+          <option value="Pasilla de Maquinas">Pasilla de Maquinas</option>
+          <option value="Pasilla de Electronicas">Pasilla de Electronicas</option>
+          <option value="Ripio">Ripio</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="productoOtroContenedor" class="campo oculto">
+      <label for="productoOtro">Especifica el producto</label>
+      <input type="text" id="productoOtro" placeholder="Escribe el valor">
+    </div>
+
+    <div class="campo">
+      <label for="observaciones">Observaciones</label>
+      <input type="text" id="observaciones" placeholder="">
+    </div>
+
+    <button type="submit" class="btn-guardar" id="btnGuardar">Guardar información</button>
+    <div id="mensaje"></div>
+  </form>
+</div>
+
+<script>
+  // ==== URL de la aplicación web de Google Apps Script ====
+  // Reemplaza esto por la URL que termina en /exec que te da Apps Script
+  // al implementar el script como "Aplicación web" (ver instrucciones).
+  const URL_APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbwcCs7-rOgtcNUapbL_OqaUKC8qTCpogSci-gSo4rnz_LM45fguNYO_gMNYi8JRnXH1/exec';
+
+  const inputFecha = document.getElementById('fecha');
+
+  document.getElementById('btnFechaHoy').addEventListener('click', function() {
+    const hoy = new Date();
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoy.getDate()).padStart(2, '0');
+    inputFecha.value = `${yyyy}-${mm}-${dd}`;
+  });
+
+  // Botón para alternar el teclado del campo "lote" entre numérico
+  // (por defecto) y texto.
+  const inputLote = document.getElementById('lote');
+  const botonTipoTecladoLote = document.getElementById('btnTipoTecladoLote');
+
+  botonTipoTecladoLote.addEventListener('click', function() {
+    const esNumerico = inputLote.getAttribute('inputmode') === 'numeric';
+    inputLote.setAttribute('inputmode', esNumerico ? 'text' : 'numeric');
+    botonTipoTecladoLote.textContent = esNumerico ? '123' : 'ABC';
+    botonTipoTecladoLote.title = esNumerico ? 'Cambiar a teclado numérico' : 'Cambiar a teclado de texto';
+    inputLote.blur();
+    inputLote.focus();
+  });
+
+  // Conecta cada select que tiene una opción "Otro"/"Otra" con su
+  // campo de texto correspondiente: se muestra solo cuando esa opción
+  // está seleccionada, y se limpia/oculta en caso contrario.
+  function conectarCampoOtro(idSelect, valorOtro, idContenedor, idInput) {
+    const select = document.getElementById(idSelect);
+    const contenedor = document.getElementById(idContenedor);
+    const input = document.getElementById(idInput);
+
+    select.addEventListener('change', function() {
+      if (select.value === valorOtro) {
+        contenedor.classList.remove('oculto');
+        input.required = true;
+      } else {
+        contenedor.classList.add('oculto');
+        input.required = false;
+        input.value = '';
+      }
+    });
+  }
+
+  conectarCampoOtro('cantidadProducida', 'Otro', 'cantidadProducidaOtroContenedor', 'cantidadProducidaOtro');
+  conectarCampoOtro('ubicacion', 'Otra', 'ubicacionOtroContenedor', 'ubicacionOtro');
+  conectarCampoOtro('producto', 'Otro', 'productoOtroContenedor', 'productoOtro');
+
+  // "Cantidad producida" combina Fracción + Qty en un solo selector
+  // (ej. "Ax75" = Fracción A, Qty 75). Esta función separa ambas partes
+  // para poder guardarlas en columnas distintas de la hoja. Si el valor
+  // no sigue ese patrón (por ejemplo, se escribió algo libre en "Otro"),
+  // la fracción queda vacía y todo el texto se usa como Qty.
+  function separarFraccionYQty(valorSeleccionado, valorEscrito) {
+    const coincidencia = /^([A-Za-z])x(\d+)$/.exec(valorSeleccionado);
+    if (coincidencia) {
+      return { fraccion: coincidencia[1].toUpperCase(), qty: coincidencia[2] };
+    }
+    return { fraccion: '', qty: valorEscrito };
+  }
+
+  document.getElementById('formProduccion').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const mensaje = document.getElementById('mensaje');
+    const botonGuardar = document.getElementById('btnGuardar');
+
+    const lote = document.getElementById('lote').value.trim();
+
+    const cantidadProducidaSeleccion = document.getElementById('cantidadProducida').value;
+    const cantidadProducidaTexto = cantidadProducidaSeleccion === 'Otro'
+      ? document.getElementById('cantidadProducidaOtro').value.trim()
+      : cantidadProducidaSeleccion;
+    const { fraccion, qty } = separarFraccionYQty(cantidadProducidaSeleccion, cantidadProducidaTexto);
+
+    let ubicacion = document.getElementById('ubicacion').value;
+    if (ubicacion === 'Otra') {
+      ubicacion = document.getElementById('ubicacionOtro').value.trim();
+    }
+
+    let producto = document.getElementById('producto').value;
+    if (producto === 'Otro') {
+      producto = document.getElementById('productoOtro').value.trim();
+    }
+
+    const observaciones = document.getElementById('observaciones').value.trim();
+    const fecha = inputFecha.value;
+
+    if (!lote || !ubicacion || !cantidadProducidaSeleccion || !producto) {
+      mensaje.style.color = 'red';
+      mensaje.textContent = 'Completa todos los campos.';
+      return;
+    }
+
+    // Regla especial: si el producto es "EP 05", el cliente/punto es
+    // "Starbucks". En cualquier otro caso, el cliente/punto es el mismo
+    // valor del producto.
+    const clienteOPunto = producto === 'EP 05' ? 'Starbucks' : producto;
+
+    const datos = {
+      ubicacion: ubicacion,
+      fraccion: fraccion,
+      cliente_o_pto: clienteOPunto,
+      lote: lote,
+      qty: qty,
+      preparacion: producto,
+      observaciones: observaciones,
+      fecha: fecha
+    };
+
+    if (!URL_APPS_SCRIPT || URL_APPS_SCRIPT === 'URL_APPS_SCRIPT') {
+      mensaje.style.color = 'red';
+      mensaje.textContent = 'Falta configurar la URL de Google Apps Script en el código.';
+      return;
+    }
+
+    botonGuardar.disabled = true;
+    mensaje.style.color = '#555';
+    mensaje.textContent = 'Guardando en Google Sheets...';
+
+    try {
+      // Content-Type "text/plain" evita que el navegador dispare una
+      // solicitud de verificación (preflight) que Apps Script no maneja
+      // bien; el script igual puede leer el texto y parsearlo como JSON.
+      const respuesta = await fetch(URL_APPS_SCRIPT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(datos)
+      });
+
+      const resultado = await respuesta.json();
+
+      if (!respuesta.ok || resultado.resultado !== 'ok') {
+        throw new Error(resultado.error || 'Respuesta inesperada del servidor.');
+      }
+
+      mensaje.style.color = 'green';
+      mensaje.textContent = 'Guardado en la hoja: Lote ' + lote + ' / ' + ubicacion + ' / ' + cantidadProducidaTexto + ' / ' + producto + (fecha ? ' / Fecha ' + fecha : '');
+
+      document.getElementById('formProduccion').reset();
+      document.getElementById('cantidadProducidaOtroContenedor').classList.add('oculto');
+      document.getElementById('ubicacionOtroContenedor').classList.add('oculto');
+      document.getElementById('productoOtroContenedor').classList.add('oculto');
+    } catch (error) {
+      mensaje.style.color = 'red';
+      mensaje.textContent = 'No se pudo guardar en Google Sheets: ' + error.message;
+    } finally {
+      botonGuardar.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>
