@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agregar Información</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #4A90E2;
+    --azul-oscuro: #2f6fc4;
+    --navy: #24344d;
+    --navy-suave: #34495e;
+    --gris-texto: #4a4f57;
+    --gris-borde: #d7dbe2;
+    --etiqueta-fondo: #eaf1fb;
+    --etiqueta-texto: #1f3a5f;
+    --verde: #2ecc71;
+    --rojo: #e74c3c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(180deg, #eef1f8 0%, #f4f4f9 100%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding: 32px 16px;
+    color: var(--gris-texto);
+    -webkit-font-smoothing: antialiased;
+  }
+  .card {
+    background: #fff;
+    padding: 34px 36px;
+    border-radius: 16px;
+    box-shadow: 0 14px 36px rgba(30, 41, 59, 0.12);
+    border: 1px solid rgba(0,0,0,0.04);
+    width: 100%;
+    max-width: 620px;
+  }
+  h2 {
+    margin: 0 0 4px 0;
+    text-align: center;
+    color: #1f2430;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .subtitulo {
+    margin: 0 0 22px 0;
+    text-align: center;
+    font-size: 13px;
+    color: #8a90a0;
+    font-weight: 500;
+  }
+  label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5b6070;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  input[type="text"], input[type="date"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1f2430;
+    background: #fff;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  input[type="text"]:focus, input[type="date"]:focus {
+    outline: none;
+    border-color: var(--azul);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+  }
+  .fila-dos-columnas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 18px;
+  }
+  .campo { margin-top: 18px; }
+  .fila-dos-columnas .campo { margin-top: 0; }
+  .campo-total input {
+    text-align: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--azul-oscuro);
+    background: var(--etiqueta-fondo);
+    border-color: var(--azul);
+  }
+  .campo-total label { text-align: center; font-weight: 700; }
+
+  /* ==== Select con flecha personalizada ==== */
+  .select-envoltura {
+    position: relative;
+  }
+  select {
+    width: 100%;
+    padding: 10px 36px 10px 12px;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2430;
+    background-color: #fbfbfd;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  select:hover { border-color: #b7c2d6; }
+  select:focus {
+    outline: none;
+    border-color: var(--azul);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+  }
+  .select-envoltura::after {
+    content: '';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid #7a8194;
+    border-bottom: 2px solid #7a8194;
+    transform: translateY(-65%) rotate(45deg);
+    pointer-events: none;
+  }
+
+  #otroContenedor {
+    display: none;
+    margin-top: 18px;
+  }
+  .oculto { display: none !important; }
+
+  /* ==== Fecha con botón "Hoy" ==== */
+  .fila-fecha {
+    display: flex;
+    gap: 8px;
+  }
+  .fila-fecha input { flex: 1; }
+  .btn-hoy {
+    padding: 0 16px;
+    background: var(--azul);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+  }
+  .btn-hoy:hover { background: var(--azul-oscuro); }
+
+  /* ==== Lote con botón para alternar teclado ==== */
+  .fila-lote {
+    display: flex;
+    gap: 8px;
+  }
+  .fila-lote input { flex: 1; }
+  .btn-tipo-teclado {
+    padding: 0 14px;
+    background: var(--azul);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+    min-width: 46px;
+  }
+  .btn-tipo-teclado:hover { background: var(--azul-oscuro); }
+
+  /* ==== Secciones ==== */
+  .seccion-titulo {
+    margin-top: 30px;
+    margin-bottom: 12px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #8a90a0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .seccion-titulo::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--gris-borde);
+  }
+  .seccion-titulo.destacado {
+    font-weight: 800;
+    color: #3d4250;
+  }
+
+  /* ==== Selectores de grupo (primer / segundo grupo) ==== */
+  .grupos-desplegables {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .selector-grupo {
+    background: #fbfbfd;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .selector-grupo > label {
+    margin-bottom: 10px;
+    color: var(--etiqueta-texto);
+    font-size: 12.5px;
+  }
+  .fila-selector {
+    display: flex;
+    gap: 6px;
+  }
+  .fila-selector .select-envoltura { flex: 1.3; }
+  .fila-selector input[type="text"] { flex: 1; min-width: 0; }
+  .btn-agregar {
+    flex-shrink: 0;
+    width: 38px;
+    background: var(--azul);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+    transition: background 0.15s ease;
+  }
+  .btn-agregar:hover { background: var(--azul-oscuro); }
+  .btn-agregar:disabled {
+    background: #c7ccd6;
+    cursor: default;
+  }
+
+  .lista-agregados {
+    list-style: none;
+    margin: 12px 0 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .lista-agregados:empty { margin-top: 0; }
+  .item-agregado {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--etiqueta-fondo);
+    border-radius: 7px;
+    padding: 7px 10px;
+    font-size: 12.5px;
+  }
+  .item-etiqueta {
+    flex: 1;
+    font-weight: 600;
+    color: var(--etiqueta-texto);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .item-cantidad {
+    font-weight: 700;
+    color: #1f2430;
+    background: #fff;
+    border-radius: 5px;
+    padding: 2px 8px;
+    min-width: 28px;
+    text-align: center;
+  }
+  .item-quitar {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    color: #9aa1b0;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .item-quitar:hover {
+    background: rgba(231, 76, 60, 0.12);
+    color: var(--rojo);
+  }
+
+  /* ==== Fila horizontal G1 / G2 / Humedad ==== */
+  .fila-horizontal-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .fila-horizontal-3 input {
+    text-align: center;
+    font-weight: 600;
+  }
+  .fila-horizontal-3 label {
+    text-align: center;
+    font-weight: 700;
+  }
+
+  /* ==== Tabla de granulometría ==== */
+  .tabla-envoltura {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #d3d9e3;
+    box-shadow: 0 4px 14px rgba(30, 41, 59, 0.06);
+  }
+  table.grupos {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0;
+  }
+  table.grupos th {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-suave) 100%);
+    color: #fff;
+    padding: 9px 10px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  table.grupos th:first-child { text-align: left; }
+  table.grupos th:last-child { text-align: center; }
+  table.grupos td {
+    border-top: 1px solid #e4e8ef;
+    padding: 7px 10px;
+    vertical-align: middle;
+  }
+  table.grupos tr:first-child td { border-top: none; }
+  table.grupos td.etiqueta {
+    background: var(--etiqueta-fondo);
+    color: var(--etiqueta-texto);
+    font-weight: 700;
+    font-size: 12.5px;
+    white-space: nowrap;
+    border-right: 1px solid #e4e8ef;
+  }
+  table.grupos tr:nth-child(even) td:not(.etiqueta) {
+    background: #f7f9fc;
+  }
+  table.grupos input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--gris-borde);
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-family: inherit;
+    box-sizing: border-box;
+    text-align: center;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  table.grupos input:focus {
+    outline: none;
+    border-color: var(--azul);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.15);
+  }
+
+  .btn-guardar {
+    width: 100%;
+    margin-top: 28px;
+    padding: 13px;
+    background: var(--azul);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.32);
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-guardar:hover {
+    background: var(--azul-oscuro);
+    box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+  }
+  .btn-volver {
+    width: 100%;
+    margin-top: 10px;
+    padding: 11px;
+    background: transparent;
+    color: #8a90a0;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-volver:hover {
+    color: var(--azul-oscuro);
+    border-color: var(--azul);
+  }
+  #mensaje {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+
+  @media (max-width: 560px) {
+    .fila-dos-columnas,
+    .grupos-desplegables,
+    .fila-horizontal-3 {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Agregar Información</h2>
+  <p class="subtitulo">Registra una nueva ficha de análisis</p>
+
+  <form id="formInfo">
+    <div class="fila-dos-columnas">
+      <div class="campo">
+        <label for="lote">Número de lote</label>
+        <div class="fila-lote">
+          <input type="text" id="lote" placeholder="" inputmode="numeric" required>
+          <button type="button" id="btnTipoTecladoLote" class="btn-tipo-teclado" title="Cambiar a teclado de texto">ABC</button>
+        </div>
+      </div>
+      <div class="campo">
+        <label for="muestra">No. Muestra</label>
+        <div class="select-envoltura">
+          <select id="muestra">
+            <option value="">Selecciona una opción</option>
+            <option value="Ax75">Ax75</option>
+            <option value="Bx75">Bx75</option>
+            <option value="Cx75">Cx75</option>
+            <option value="Dx50">Dx50</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="otroContenedor">
+      <label for="muestraOtro">Especifica la muestra</label>
+      <input type="text" id="muestraOtro" placeholder="Escribe el valor">
+    </div>
+
+    <div class="campo">
+      <label for="fecha">Fecha</label>
+      <div class="fila-fecha">
+        <input type="date" id="fecha">
+        <button type="button" id="btnFechaHoy" class="btn-hoy">📅 Hoy</button>
+      </div>
+    </div>
+
+    <div class="seccion-titulo">Análisis físico</div>
+    <div class="grupos-desplegables">
+      <div class="selector-grupo">
+        <label for="selectGrupo1">Primer grupo</label>
+        <div class="fila-selector">
+          <div class="select-envoltura">
+            <select id="selectGrupo1"></select>
+          </div>
+          <input type="text" id="cantidadGrupo1" placeholder="" inputmode="decimal">
+          <button type="button" id="agregarGrupo1" class="btn-agregar" title="Agregar">+</button>
+        </div>
+        <ul class="lista-agregados" id="listaGrupo1"></ul>
+        <div class="campo">
+          <label for="valor_1g">G1</label>
+          <input type="text" id="valor_1g" placeholder="" inputmode="decimal">
+        </div>
+      </div>
+
+      <div class="selector-grupo">
+        <label for="selectGrupo2">Segundo grupo</label>
+        <div class="fila-selector">
+          <div class="select-envoltura">
+            <select id="selectGrupo2"></select>
+          </div>
+          <input type="text" id="cantidadGrupo2" placeholder="" inputmode="decimal">
+          <button type="button" id="agregarGrupo2" class="btn-agregar" title="Agregar">+</button>
+        </div>
+        <ul class="lista-agregados" id="listaGrupo2"></ul>
+        <div class="campo">
+          <label for="valor_2g">G2</label>
+          <input type="text" id="valor_2g" placeholder="" inputmode="decimal">
+        </div>
+      </div>
+    </div>
+
+    <div class="campo campo-total">
+      <label for="totalFaltas">Total de faltas</label>
+      <input type="text" id="totalFaltas" readonly>
+    </div>
+
+    <div class="campo">
+      <label for="humedad">Humedad</label>
+      <input type="text" id="humedad" placeholder="" inputmode="decimal">
+    </div>
+
+    <div class="campo">
+      <label for="observacion">Observación</label>
+      <input type="text" id="observacion" placeholder="">
+    </div>
+
+    <div class="seccion-titulo destacado">Granulometría</div>
+    <div class="tabla-envoltura">
+      <table class="grupos">
+        <tr>
+          <th style="width:50%;">Malla</th>
+          <th>Valor</th>
+        </tr>
+        <tr>
+          <td class="etiqueta">Malla 18</td>
+          <td><input type="text" id="malla_18" inputmode="decimal"></td>
+        </tr>
+        <tr>
+          <td class="etiqueta">Malla 17</td>
+          <td><input type="text" id="malla_17" inputmode="decimal"></td>
+        </tr>
+        <tr>
+          <td class="etiqueta">Malla 16</td>
+          <td><input type="text" id="malla_16" inputmode="decimal"></td>
+        </tr>
+        <tr>
+          <td class="etiqueta">Malla 15</td>
+          <td><input type="text" id="malla_15" inputmode="decimal"></td>
+        </tr>
+        <tr>
+          <td class="etiqueta">Malla 14</td>
+          <td><input type="text" id="malla_14" inputmode="decimal"></td>
+        </tr>
+        <tr>
+          <td class="etiqueta">Malla 13</td>
+          <td><input type="text" id="malla_13" inputmode="decimal"></td>
+        </tr>
+        <tr>
+          <td class="etiqueta">Malla 12</td>
+          <td><input type="text" id="malla_12" inputmode="decimal"></td>
+        </tr>
+        <tr>
+          <td class="etiqueta">0</td>
+          <td><input type="text" id="malla_0" inputmode="decimal"></td>
+        </tr>
+      </table>
+    </div>
+
+    <button type="submit" class="btn-guardar">Guardar información</button>
+    <div id="mensaje"></div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ==== Conexión con Supabase ====
+  // Reemplaza estos dos valores por los de tu propio proyecto de Supabase
+  // (Project Settings → API → Project URL / anon public key).
+  const SUPABASE_URL = 'https://eqbzvxtxvrzrbnbfhslk.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVxYnp2eHR4dnJ6cmJuYmZoc2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMDE3MzQsImV4cCI6MjEwMDc3NzczNH0.2EZ84ANMel8GGOKzT_H-LOxpuqvxn-CZ4tbcPm2IPc0';
+  const clienteSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ==== URL del Apps Script que actualiza la hoja de cálculo con el
+  // análisis (IGTotal, IG Parcial, II G, BRP, FALTAS, granulometría) ====
+  // Reemplaza esto por la URL que termina en /exec al implementar el
+  // script "AppsScript_Hoja_Analisis.gs" como aplicación web.
+  const URL_APPS_SCRIPT_HOJA = 'https://script.google.com/macros/s/AKfycbxXIPVaKiFIgGMKaKzc4oQp-4_NqJFW3bqwEupot0rdI0OpW7b1YWj1uFOW-b041kHq/exec';
+
+  const selectMuestra = document.getElementById('muestra');
+  const otroContenedor = document.getElementById('otroContenedor');
+  const inputOtro = document.getElementById('muestraOtro');
+  const inputFecha = document.getElementById('fecha');
+
+  document.getElementById('btnFechaHoy').addEventListener('click', function() {
+    const hoy = new Date();
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoy.getDate()).padStart(2, '0');
+    inputFecha.value = `${yyyy}-${mm}-${dd}`;
+  });
+
+  // Botón para alternar el teclado del campo "lote" entre numérico
+  // (por defecto) y texto. Cambiar el atributo inputmode no siempre
+  // basta para refrescar el teclado ya abierto en el celular, así que
+  // se quita el foco y se vuelve a poner para forzar que el teclado
+  // correcto se despliegue.
+  const inputLote = document.getElementById('lote');
+  const botonTipoTecladoLote = document.getElementById('btnTipoTecladoLote');
+
+  botonTipoTecladoLote.addEventListener('click', function() {
+    const esNumerico = inputLote.getAttribute('inputmode') === 'numeric';
+    inputLote.setAttribute('inputmode', esNumerico ? 'text' : 'numeric');
+    botonTipoTecladoLote.textContent = esNumerico ? '123' : 'ABC';
+    botonTipoTecladoLote.title = esNumerico ? 'Cambiar a teclado numérico' : 'Cambiar a teclado de texto';
+    inputLote.blur();
+    inputLote.focus();
+  });
+
+  selectMuestra.addEventListener('change', function() {
+    if (selectMuestra.value === 'Otro') {
+      otroContenedor.style.display = 'block';
+      inputOtro.required = true;
+    } else {
+      otroContenedor.style.display = 'none';
+      inputOtro.required = false;
+      inputOtro.value = '';
+    }
+  });
+
+  // Toma lo que la persona escribió en Humedad, 1G o 2G y le agrega el
+  // sufijo correspondiente (% o g) al número, sin duplicarlo si ya lo
+  // tenía. Si el campo queda vacío, no agrega nada.
+  function formatearConSufijo(valorBruto, sufijo) {
+    let texto = (valorBruto === undefined || valorBruto === null) ? '' : String(valorBruto).trim();
+    if (!texto) return '';
+    if (sufijo === '%' && texto.endsWith('%')) {
+      texto = texto.slice(0, -1).trim();
+    } else if (sufijo === 'g' && /[gG]$/.test(texto)) {
+      texto = texto.slice(0, -1).trim();
+    }
+    if (!texto) return '';
+    return texto + sufijo;
+  }
+
+  const campoHumedad = document.getElementById('humedad');
+  if (campoHumedad) {
+    campoHumedad.addEventListener('blur', function() {
+      campoHumedad.value = formatearConSufijo(campoHumedad.value, '%');
+    });
+  }
+  ['valor_1g', 'valor_2g'].forEach(function(id) {
+    const input = document.getElementById(id);
+    if (input) {
+      input.addEventListener('blur', function() {
+        input.value = formatearConSufijo(input.value, 'g');
+      });
+    }
+  });
+
+  // "No. Muestra" combina Fracción + Qty en un solo selector (ej. "Ax75"
+  // = Fracción A, Qty 75). Esta función separa ambas partes para poder
+  // ubicar en la hoja la fila con esa Fracción y ese Qty exactos. Si el
+  // valor no sigue ese patrón (por ejemplo, se escribió algo libre en
+  // "Otro"), la fracción queda vacía y todo el texto se usa como Qty.
+  function separarFraccionYQty(valorSeleccionado, valorEscrito) {
+    const coincidencia = /^([A-Za-z])x(\d+)$/.exec(valorSeleccionado);
+    if (coincidencia) {
+      return { fraccion: coincidencia[1].toUpperCase(), qty: coincidencia[2] };
+    }
+    return { fraccion: '', qty: valorEscrito };
+  }
+
+  // ==== Primer grupo y Segundo grupo como listas desplegables ====
+  // En vez de mostrar siempre los 11 (o 9) campos como filas fijas, cada
+  // grupo es ahora un selector: se elige el ítem (Negro, Rojo, Partidos...),
+  // se escribe su cantidad y se agrega a una lista. El ítem agregado
+  // desaparece del selector (no se puede duplicar) y se puede quitar con la
+  // "✕" para volver a elegirlo si fue un error.
+  const GRUPO1_OPCIONES = [
+    ['g1_negro', 'Negro'],
+    ['g1_rojo', 'Rojo'],
+    ['g1_vinagre', 'Vinagre'],
+    ['g1_mantequillo', 'Mantequillo'],
+    ['g1_reposado', 'Reposado'],
+    ['g1_cardenillo', 'Cardenillo'],
+    ['g1_piedras', 'Piedras, palos, otro'],
+    ['g1_guayaba', 'Guayaba'],
+    ['g1_negroparcial', 'Negro parcial'],
+    ['g1_vinagreparcial', 'Vinagre parcial'],
+    ['g1_cardenilloparcial', 'Cardenillo parcial']
+  ];
+
+  const GRUPO2_OPCIONES = [
+    ['g2_partidos', 'Partidos'],
+    ['g2_pasilla', 'Pasilla máquinas'],
+    ['g2_concha', 'Concha'],
+    ['g2_blanco', 'Blanco decolorado'],
+    ['g2_aplastados', 'Aplastados'],
+    ['g2_vano', 'Vano Balsudos'],
+    ['g2_averanado', 'Averanado arrugado'],
+    ['g2_brocados', 'Brocados'],
+    ['g2_brocaspunto', 'Brocas punto']
+  ];
+
+  // Guarda lo que se ha agregado en cada grupo: { 'g1_negro': '4', ... }
+  const valoresGrupo1 = {};
+  const valoresGrupo2 = {};
+
+  // ==== Cálculo de "Total de faltas" ====
+  // Primer grupo: negro, rojo, vinagre, mantequillo, reposado, cardenillo,
+  // piedras/palos/otro y guayaba valen 1 por grano; los "parciales"
+  // (negro, vinagre, cardenillo) valen 0.5 por grano.
+  const PESOS_GRUPO1 = {
+    g1_negro: 1,
+    g1_rojo: 1,
+    g1_vinagre: 1,
+    g1_mantequillo: 1,
+    g1_reposado: 1,
+    g1_cardenillo: 1,
+    g1_piedras: 1,
+    g1_guayaba: 1,
+    g1_negroparcial: 0.5,
+    g1_vinagreparcial: 0.5,
+    g1_cardenilloparcial: 0.5
+  };
+
+  // Segundo grupo: todos los granos se dividen entre 5, excepto brocas de
+  // punto que se dividen entre 10.
+  const DIVISOR_GRUPO2 = {
+    g2_partidos: 5,
+    g2_pasilla: 5,
+    g2_concha: 5,
+    g2_blanco: 5,
+    g2_aplastados: 5,
+    g2_vano: 5,
+    g2_averanado: 5,
+    g2_brocados: 5,
+    g2_brocaspunto: 10
+  };
+
+  function calcularTotalFaltas() {
+    let total = 0;
+
+    Object.keys(valoresGrupo1).forEach(function(id) {
+      const cantidad = parseFloat(valoresGrupo1[id]);
+      if (isNaN(cantidad)) return;
+      const peso = PESOS_GRUPO1.hasOwnProperty(id) ? PESOS_GRUPO1[id] : 1;
+      total += cantidad * peso;
+    });
+
+    Object.keys(valoresGrupo2).forEach(function(id) {
+      const cantidad = parseFloat(valoresGrupo2[id]);
+      if (isNaN(cantidad)) return;
+      const divisor = DIVISOR_GRUPO2.hasOwnProperty(id) ? DIVISOR_GRUPO2[id] : 5;
+      total += cantidad / divisor;
+    });
+
+    const totalRedondeado = Math.round(total * 100) / 100;
+    const campoTotal = document.getElementById('totalFaltas');
+    if (campoTotal) campoTotal.value = totalRedondeado;
+  }
+
+  // Arma el selector desplegable + lista de agregados para un grupo, y
+  // devuelve un controlador con un método "reiniciar" para usar después de
+  // guardar el formulario.
+  function inicializarSelectorGrupo(opciones, valoresEstado, ids) {
+    const select = document.getElementById(ids.select);
+    const inputCantidad = document.getElementById(ids.cantidad);
+    const botonAgregar = document.getElementById(ids.boton);
+    const lista = document.getElementById(ids.lista);
+
+    function renderizarOpciones() {
+      select.innerHTML = '<option value="">Selecciona un ítem…</option>';
+      opciones.forEach(function(opcion) {
+        const id = opcion[0];
+        const etiqueta = opcion[1];
+        if (valoresEstado.hasOwnProperty(id)) return; // ya agregado
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = etiqueta;
+        select.appendChild(option);
+      });
+    }
+
+    function renderizarLista() {
+      lista.innerHTML = '';
+      opciones.forEach(function(opcion) {
+        const id = opcion[0];
+        const etiqueta = opcion[1];
+        if (!valoresEstado.hasOwnProperty(id)) return;
+
+        const item = document.createElement('li');
+        item.className = 'item-agregado';
+
+        const spanEtiqueta = document.createElement('span');
+        spanEtiqueta.className = 'item-etiqueta';
+        spanEtiqueta.textContent = etiqueta;
+
+        const spanCantidad = document.createElement('span');
+        spanCantidad.className = 'item-cantidad';
+        spanCantidad.textContent = valoresEstado[id] !== '' ? valoresEstado[id] : '—';
+
+        const botonQuitar = document.createElement('button');
+        botonQuitar.type = 'button';
+        botonQuitar.className = 'item-quitar';
+        botonQuitar.title = 'Quitar';
+        botonQuitar.textContent = '✕';
+        botonQuitar.addEventListener('click', function() {
+          delete valoresEstado[id];
+          renderizarOpciones();
+          renderizarLista();
+        });
+
+        item.appendChild(spanEtiqueta);
+        item.appendChild(spanCantidad);
+        item.appendChild(botonQuitar);
+        lista.appendChild(item);
+      });
+      calcularTotalFaltas();
+    }
+
+    function agregarSeleccionActual() {
+      const idSeleccionado = select.value;
+      if (!idSeleccionado) return;
+      valoresEstado[idSeleccionado] = inputCantidad.value.trim();
+      inputCantidad.value = '';
+      renderizarOpciones();
+      renderizarLista();
+      select.focus();
+    }
+
+    botonAgregar.addEventListener('click', agregarSeleccionActual);
+    inputCantidad.addEventListener('keydown', function(evento) {
+      if (evento.key === 'Enter') {
+        evento.preventDefault();
+        agregarSeleccionActual();
+      }
+    });
+
+    renderizarOpciones();
+    renderizarLista();
+
+    return {
+      reiniciar: function() {
+        Object.keys(valoresEstado).forEach(function(id) { delete valoresEstado[id]; });
+        renderizarOpciones();
+        renderizarLista();
+      }
+    };
+  }
+
+  const controladorGrupo1 = inicializarSelectorGrupo(GRUPO1_OPCIONES, valoresGrupo1, {
+    select: 'selectGrupo1', cantidad: 'cantidadGrupo1', boton: 'agregarGrupo1', lista: 'listaGrupo1'
+  });
+  const controladorGrupo2 = inicializarSelectorGrupo(GRUPO2_OPCIONES, valoresGrupo2, {
+    select: 'selectGrupo2', cantidad: 'cantidadGrupo2', boton: 'agregarGrupo2', lista: 'listaGrupo2'
+  });
+
+  // ==== Cálculos para la hoja de cálculo (IGTotal, IG Parcial, II G, BRP
+  // y granulometría) ====
+  // Suma los valores crudos (sin ponderar) de los ids indicados dentro de
+  // un objeto de estado (valoresGrupo1 o valoresGrupo2).
+  function sumarValoresCrudos(valoresEstado, ids) {
+    return ids.reduce(function(acumulado, id) {
+      const cantidad = parseFloat(valoresEstado[id]);
+      return acumulado + (isNaN(cantidad) ? 0 : cantidad);
+    }, 0);
+  }
+
+  // IGTotal: suma de Negro, Rojo, Vinagre, Mantequillo, Reposado,
+  // Cardenillo, Piedras/palos/otro y Guayaba.
+  const IDS_IGTOTAL = [
+    'g1_negro', 'g1_rojo', 'g1_vinagre', 'g1_mantequillo',
+    'g1_reposado', 'g1_cardenillo', 'g1_piedras', 'g1_guayaba'
+  ];
+  // IG Parcial: suma de Negro parcial, Vinagre parcial, Cardenillo parcial.
+  const IDS_IGPARCIAL = ['g1_negroparcial', 'g1_vinagreparcial', 'g1_cardenilloparcial'];
+  // II G: suma de todo el segundo grupo, SIN incluir brocas de punto.
+  const IDS_IIG = [
+    'g2_partidos', 'g2_pasilla', 'g2_concha', 'g2_blanco',
+    'g2_aplastados', 'g2_vano', 'g2_averanado', 'g2_brocados'
+  ];
+
+  // Granulometría en cascada: Malla 18 siempre es 100. Cada malla
+  // siguiente resta, al resultado de la malla anterior, la mitad del
+  // valor que la persona escribió en esa malla.
+  // Granulometría: Malla 18 siempre es 100. Cada malla siguiente resta,
+  // al resultado de la malla anterior, la mitad del valor digitado en
+  // esa malla. La malla "0" es un paso más de la misma cascada, después
+  // de Malla 12, y se envía como su propia columna (no se mezcla con M12).
+  function calcularGranulometriaCascada() {
+    function valorMalla(id) {
+      const el = document.getElementById(id);
+      const numero = el ? parseFloat(el.value) : NaN;
+      return isNaN(numero) ? 0 : numero;
+    }
+    const m18 = 100;
+    const m17 = m18 - valorMalla('malla_17') / 2;
+    const m16 = m17 - valorMalla('malla_16') / 2;
+    const m15 = m16 - valorMalla('malla_15') / 2;
+    const m14 = m15 - valorMalla('malla_14') / 2;
+    const m13 = m14 - valorMalla('malla_13') / 2;
+    const m12 = m13 - valorMalla('malla_12') / 2;
+    const m0 = m12 - valorMalla('malla_0') / 2;
+    return { m18: m18, m17: m17, m16: m16, m15: m15, m14: m14, m13: m13, m12: m12, m0: m0 };
+  }
+
+  // Envía a la hoja de cálculo (vía Apps Script) el análisis calculado
+  // para el Lote + Fracción (letra) + Qty indicados. No bloquea el
+  // guardado principal: si falla, solo se informa como aviso.
+  async function actualizarHojaDeCalculo(lote, fraccion, qty) {
+    if (!URL_APPS_SCRIPT_HOJA || URL_APPS_SCRIPT_HOJA.indexOf('PEGA_AQUI') !== -1) {
+      return { resultado: 'omitido' };
+    }
+
+    const igTotal = sumarValoresCrudos(valoresGrupo1, IDS_IGTOTAL);
+    const igParcial = sumarValoresCrudos(valoresGrupo1, IDS_IGPARCIAL);
+    const iiG = sumarValoresCrudos(valoresGrupo2, IDS_IIG);
+    let brp = parseFloat(valoresGrupo2['g2_brocaspunto']);
+    if (isNaN(brp)) brp = 0;
+    const faltasEl = document.getElementById('totalFaltas');
+    const faltas = faltasEl ? faltasEl.value : '';
+    const granulometria = calcularGranulometriaCascada();
+
+    const datosHoja = {
+      lote: lote,
+      fraccion: fraccion,
+      qty: qty,
+      igTotal: igTotal,
+      igParcial: igParcial,
+      iiG: iiG,
+      brp: brp,
+      faltas: faltas,
+      m18: granulometria.m18,
+      m17: granulometria.m17,
+      m16: granulometria.m16,
+      m15: granulometria.m15,
+      m14: granulometria.m14,
+      m13: granulometria.m13,
+      m12: granulometria.m12,
+      m0: granulometria.m0
+    };
+
+    try {
+      const respuesta = await fetch(URL_APPS_SCRIPT_HOJA, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(datosHoja)
+      });
+      const resultado = await respuesta.json();
+      return resultado;
+    } catch (error) {
+      return { resultado: 'error', error: error.message };
+    }
+  }
+
+  document.getElementById('formInfo').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const lote = document.getElementById('lote').value.trim();
+    const muestraSeleccion = selectMuestra.value;
+    let muestra = muestraSeleccion;
+    if (muestra === 'Otro') {
+      muestra = inputOtro.value.trim();
+    }
+    // "No. Muestra" combina Fracción + Qty (ej. "Ax75" = Fracción A, Qty
+    // 75), igual que "Cantidad producida" en Control Diario de
+    // Producción. Se separan ambas partes para poder ubicar en la hoja
+    // la fila que tenga esa Fracción y ese Qty exactos.
+    const { fraccion: fraccionMuestra, qty: qtyMuestra } = separarFraccionYQty(muestraSeleccion, muestra);
+    const fecha = inputFecha.value;
+
+    const mensaje = document.getElementById('mensaje');
+
+    if (!lote || !muestra) {
+      mensaje.style.color = 'red';
+      mensaje.textContent = 'Completa todos los campos.';
+      return;
+    }
+
+    const datos = { lote: lote, muestra: muestra, fecha: fecha };
+
+    // Primer y segundo grupo: vienen de lo agregado en los selectores
+    // desplegables (no de inputs fijos como antes).
+    Object.keys(valoresGrupo1).forEach(function(id) { datos[id] = valoresGrupo1[id]; });
+    Object.keys(valoresGrupo2).forEach(function(id) { datos[id] = valoresGrupo2[id]; });
+
+    // Total de faltas: se calcula y se muestra en pantalla (ver
+    // calcularTotalFaltas), pero es solo visual: no se guarda ni se envía
+    // a Supabase ni al respaldo local.
+
+    // Resto de campos (granulometría + G1 + G2 + Humedad): inputs normales.
+    const camposSimples = [
+      'malla_18', 'malla_17', 'malla_16', 'malla_15', 'malla_14', 'malla_13', 'malla_12', 'malla_0',
+      'humedad', 'valor_1g', 'valor_2g', 'observacion'
+    ];
+    camposSimples.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (id === 'humedad') {
+        datos[id] = formatearConSufijo(el.value, '%');
+      } else if (id === 'valor_1g' || id === 'valor_2g') {
+        datos[id] = formatearConSufijo(el.value, 'g');
+      } else {
+        datos[id] = el.value;
+      }
+    });
+
+    // Antes de guardar, verifica si ese lote + fracción/muestra ya existe.
+    // Primero revisa el respaldo local (rápido y funciona sin conexión)...
+    const claveLocal = lote + '__' + muestra;
+    const lotesGuardados = JSON.parse(localStorage.getItem('lotesGuardados') || '{}');
+    if (lotesGuardados[claveLocal]) {
+      alert('El lote ' + lote + ' con la fracción/muestra ' + muestra + ' ya existe. No se puede crear de nuevo.');
+      mensaje.style.color = 'red';
+      mensaje.textContent = 'El lote y la fracción ya existen.';
+      return;
+    }
+
+    // ...y luego revisa en la base de datos, por si ya existe desde otro
+    // dispositivo aunque no esté en este respaldo local.
+    mensaje.style.color = '#555';
+    mensaje.textContent = 'Verificando si ya existe...';
+
+    const { data: existente, error: errorConsulta } = await clienteSupabase
+      .from('lotes')
+      .select('lote')
+      .eq('lote', lote)
+      .eq('muestra', muestra)
+      .maybeSingle();
+
+    if (errorConsulta) {
+      mensaje.style.color = 'red';
+      mensaje.textContent = 'No se pudo verificar si el lote ya existe: ' + errorConsulta.message;
+      return;
+    }
+
+    if (existente) {
+      alert('El lote ' + lote + ' con la fracción/muestra ' + muestra + ' ya existe. No se puede crear de nuevo.');
+      mensaje.style.color = 'red';
+      mensaje.textContent = 'El lote y la fracción ya existen.';
+      return;
+    }
+
+    // Guarda este lote+muestra también en localStorage, como respaldo local
+    // por si no hay conexión con Supabase. La llave combina lote y muestra
+    // para que un mismo lote pueda tener varias muestras.
+    lotesGuardados[claveLocal] = datos;
+    localStorage.setItem('lotesGuardados', JSON.stringify(lotesGuardados));
+
+    // Crea el registro en Supabase, para que quede disponible desde
+    // cualquier dispositivo en "Consultar Lotes". Como ya verificamos que
+    // no existe, se usa insert (no upsert) para no sobrescribir nada.
+    mensaje.style.color = '#555';
+    mensaje.textContent = 'Guardando en la base de datos...';
+
+    const { error } = await clienteSupabase
+      .from('lotes')
+      .insert(datos);
+
+    if (error) {
+      mensaje.style.color = 'red';
+      mensaje.textContent = 'Se guardó localmente, pero falló el envío a la base de datos: ' + error.message;
+      return;
+    }
+
+    // Además de Supabase, actualiza en la hoja de cálculo la fila de este
+    // mismo Lote + Fracción con el análisis calculado (IGTotal, IG
+    // Parcial, II G, BRP, FALTAS y granulometría). Esto es un paso
+    // adicional: si falla, no se deshace lo ya guardado, solo se avisa.
+    const resultadoHoja = await actualizarHojaDeCalculo(lote, fraccionMuestra, qtyMuestra);
+    let avisoHoja = '';
+    if (resultadoHoja.resultado === 'error') {
+      avisoHoja = ' (Aviso: no se pudo actualizar la hoja de cálculo: ' + resultadoHoja.error + ')';
+    }
+
+    mensaje.style.color = avisoHoja ? '#a06a00' : 'green';
+    mensaje.textContent = 'Guardado: Lote ' + lote + ' / Muestra ' + muestra + (fecha ? ' / Fecha ' + fecha : '') + avisoHoja;
+
+    document.getElementById('formInfo').reset();
+    otroContenedor.style.display = 'none';
+    controladorGrupo1.reiniciar();
+    controladorGrupo2.reiniciar();
+  });
+</script>
+
+</body>
+</html>
