@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Registro de Producción</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar button {
+    background: #1e2a44;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .toolbar button:hover { background: #2d3e63; }
+
+  .toolbar button.excel { background: #1e7a3c; }
+  .toolbar button.excel:hover { background: #26983f; }
+
+  .toolbar button.editar-global { background: #f0ad4e; }
+  .toolbar button.editar-global:hover { background: #ec9c2e; }
+
+  .toolbar button.guardar-global { background: #1e7a3c; }
+  .toolbar button.guardar-global:hover { background: #26983f; }
+
+  .toolbar button.cancelar-global { background: #a33; }
+  .toolbar button.cancelar-global:hover { background: #c33; }
+
+  .toolbar button.buscar-lote { background: #4A90E2; }
+  .toolbar button.buscar-lote:hover { background: #3a7bc8; }
+
+  .toolbar button.limpiar-busqueda { background: #6c7a89; }
+  .toolbar button.limpiar-busqueda:hover { background: #58636f; }
+
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal-overlay.oculto {
+    display: none;
+  }
+
+  .modal-caja {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    width: 320px;
+    max-width: 90%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-caja h3 {
+    margin: 0 0 14px 0;
+    color: #1e2a44;
+  }
+
+  .modal-caja input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+  .modal-botones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .modal-botones button {
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #fff;
+  }
+
+  .modal-buscar { background: #4A90E2; }
+  .modal-buscar:hover { background: #3a7bc8; }
+  .modal-cerrar { background: #94a3b8; }
+  .modal-cerrar:hover { background: #7c8ba1; }
+
+  .estado {
+    font-size: 13px;
+    color: #555;
+  }
+
+  .tabla-wrapper {
+    overflow-x: auto;
+    border: 1px solid #333;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 1300px;
+    font-size: 13px;
+    background: #fff;
+  }
+
+  thead th {
+    background: #1e2a44;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 8px 10px;
+    border: 1px solid #333;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    text-transform: uppercase;
+  }
+
+  tbody td {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    color: #000000;
+    white-space: nowrap;
+  }
+
+  tbody tr:nth-child(even) { background: #eef1f6; }
+  tbody tr:nth-child(odd)  { background: #ffffff; }
+
+  tbody tr.fila-nueva {
+    animation: resaltar 2s ease-out;
+  }
+
+  @keyframes resaltar {
+    from { background: #fff3b0; }
+    to   { background: inherit; }
+  }
+
+  tbody tr.seleccionable {
+    cursor: pointer;
+  }
+
+  tbody tr.seleccionada td {
+    background: #fff3cd !important;
+    outline: 2px solid #f0ad4e;
+    outline-offset: -2px;
+  }
+
+  .vacio {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+  }
+
+  tbody td input {
+    width: 90px;
+    font-size: 12px;
+    padding: 2px 4px;
+    box-sizing: border-box;
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button id="btnRecargar">Actualizar ahora</button>
+  <button id="btnDescargarExcel" class="excel">Descargar Excel</button>
+  <button id="btnEditar" class="editar-global">Editar</button>
+  <button id="btnGuardarFila" class="guardar-global" style="display:none;">Guardar</button>
+  <button id="btnCancelarFila" class="cancelar-global" style="display:none;">Cancelar</button>
+  <button id="btnBuscarLote" class="buscar-lote">Buscar Lote</button>
+  <button id="btnLimpiarBusqueda" class="limpiar-busqueda" style="display:none;">Mostrar todos</button>
+  <span class="estado" id="estado">Cargando datos...</span>
+</div>
+
+<div id="modalBuscarLote" class="modal-overlay oculto">
+  <div class="modal-caja">
+    <h3>Buscar Lote</h3>
+    <input type="text" id="inputBuscarLote" placeholder="Escribe el número de lote...">
+    <div class="modal-botones">
+      <button id="btnEjecutarBusqueda" class="modal-buscar">Buscar</button>
+      <button id="btnCerrarBusqueda" class="modal-cerrar">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tabla-wrapper">
+  <table>
+    <thead>
+      <tr id="filaEncabezados">
+        <th>Cargando columnas...</th>
+      </tr>
+    </thead>
+    <tbody id="cuerpoTabla">
+      <tr><td class="vacio">Cargando...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  // ============================================================
+  // CONFIGURACION: reemplaza con los datos de tu proyecto Supabase
+  // (Project Settings -> API)
+  // ============================================================
+  const SUPABASE_URL = "https://eqbzvxtxvrzrbnbfhslk.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_xOyo_f01vHWQbXUI9wZuSQ_MW8qH0PD";
+  const NOMBRE_TABLA = "registro_produccion";
+  const COLUMNA_ID = "id"; // nombre real de la columna llave primaria en Supabase
+
+  const { createClient } = supabase;
+  const cliente = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const cuerpoTabla = document.getElementById("cuerpoTabla");
+  const filaEncabezados = document.getElementById("filaEncabezados");
+  const estado = document.getElementById("estado");
+  const btnRecargar = document.getElementById("btnRecargar");
+  const btnDescargarExcel = document.getElementById("btnDescargarExcel");
+  const btnEditar = document.getElementById("btnEditar");
+  const btnGuardarFila = document.getElementById("btnGuardarFila");
+  const btnCancelarFila = document.getElementById("btnCancelarFila");
+  const btnBuscarLote = document.getElementById("btnBuscarLote");
+  const btnLimpiarBusqueda = document.getElementById("btnLimpiarBusqueda");
+  const modalBuscarLote = document.getElementById("modalBuscarLote");
+  const inputBuscarLote = document.getElementById("inputBuscarLote");
+  const btnEjecutarBusqueda = document.getElementById("btnEjecutarBusqueda");
+  const btnCerrarBusqueda = document.getElementById("btnCerrarBusqueda");
+
+  // ------------------------------------------------------------
+  // Antes, las columnas venían escritas "a mano" (COLUMNAS = [...])
+  // y tenían que coincidir EXACTAMENTE (mayúsculas/minúsculas
+  // incluidas) con los nombres reales de columnas en Supabase.
+  // Como no coincidían, solo aparecía el "id" (la única que sí
+  // coincidía) y el resto salía vacío.
+  //
+  // Ahora las columnas se detectan automáticamente a partir de los
+  // datos que realmente devuelve Supabase, así que siempre se ven
+  // sin importar cómo estén escritas en la base de datos.
+  // ------------------------------------------------------------
+
+  // Etiquetas "bonitas" opcionales para mostrar en el encabezado.
+  // La clave debe estar en minúsculas y sin espacios/símbolos.
+  const ETIQUETAS = {
+    id: "Id",
+    ubicacion: "Ubicacion",
+    fraccion: "Fraccion",
+    clienteopto: "CLIENTE O PTO",
+    lote: "LOTE",
+    qty: "Qty",
+    preparacion: "PREPARACION",
+    obs: "Obs",
+    diasprod: "DIAS/PROD",
+    fecha: "FECHA",
+    porcentajeh: "%H",
+    h: "%H",
+    igtotal: "IGTotal",
+    igparcial: "IG Parcial",
+    iig: "II G",
+    brp: "BRP",
+    faltas: "FALTAS",
+    m18: "M 18",
+    m17: "M 17",
+    m16: "M 16",
+    m15: "M 15",
+    m14: "M 14",
+    m13: "M 13",
+    m12: "M 12",
+    m0: "0"
+  };
+
+  function normalizar(txt) {
+    return String(txt).toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+
+  function obtenerEtiqueta(clave) {
+    return ETIQUETAS[normalizar(clave)] || clave;
+  }
+
+  // ------------------------------------------------------------
+  // Orden fijo en el que se deben mostrar las columnas, sin
+  // importar el orden en que Supabase las devuelva. Las claves
+  // están normalizadas (minúsculas, sin espacios ni símbolos).
+  // Cualquier columna que llegue y no esté en esta lista se
+  // agrega al final, después de todas las conocidas.
+  // ------------------------------------------------------------
+  const ORDEN_COLUMNAS = [
+    "id",
+    "fecha",
+    "ubicacion",
+    "fraccion",
+    "qty",
+    "clienteopto",
+    "lote",
+    "preparacion",
+    "obs",
+    "porcentajeh",
+    "h",
+    "faltas",
+    "igtotal",
+    "igparcial",
+    "iig",
+    "brp",
+    "m18",
+    "m17",
+    "m16",
+    "m15",
+    "m14",
+    "m13",
+    "m12",
+    "m0"
+  ];
+
+  function ordenarClaves(claves) {
+    return [...claves].sort((a, b) => {
+      const posA = ORDEN_COLUMNAS.indexOf(normalizar(a));
+      const posB = ORDEN_COLUMNAS.indexOf(normalizar(b));
+      const rangoA = posA === -1 ? ORDEN_COLUMNAS.length : posA;
+      const rangoB = posB === -1 ? ORDEN_COLUMNAS.length : posB;
+      return rangoA - rangoB;
+    });
+  }
+
+  // ------------------------------------------------------------
+  // Columnas que existen en Supabase pero que NO se deben mostrar
+  // en esta tabla (siguen guardadas en la base de datos, solo se
+  // ocultan de la vista). Usar la clave normalizada.
+  // ------------------------------------------------------------
+  const COLUMNAS_OCULTAS = ["diasprod"];
+
+  function filtrarOcultas(claves) {
+    return claves.filter(clave => !COLUMNAS_OCULTAS.includes(normalizar(clave)));
+  }
+
+  let columnasActuales = [];  // [{clave, etiqueta}]
+  let ultimasFilas = [];      // datos crudos cargados de Supabase
+  let filaSeleccionadaId = null; // id de la fila marcada para editar (aún no en edición)
+  let idEnEdicion = null;         // id de la fila que está mostrando los inputs de edición
+  let filtroLoteActual = null;    // texto de búsqueda de lote activo (o null si no hay filtro)
+
+  // Busca, entre las columnas detectadas, cuál corresponde al "lote"
+  // (sin importar cómo esté escrita exactamente en Supabase).
+  function obtenerClaveLote() {
+    const col = columnasActuales.find(c => normalizar(c.clave) === "lote");
+    return col ? col.clave : null;
+  }
+
+  // Aplica el filtro de búsqueda de lote (si hay uno activo) sobre un
+  // arreglo de filas, devolviendo solo las que coincidan.
+  function aplicarFiltroLote(filas) {
+    if (!filtroLoteActual) return filas;
+    const claveLote = obtenerClaveLote();
+    if (!claveLote) return filas;
+    const termino = filtroLoteActual.trim().toLowerCase();
+    if (termino === "") return filas;
+    return filas.filter(fila => String(fila[claveLote] || "").toLowerCase().includes(termino));
+  }
+
+  function pintarEncabezados() {
+    filaEncabezados.innerHTML = "";
+    columnasActuales.forEach(col => {
+      const th = document.createElement("th");
+      th.textContent = col.etiqueta;
+      filaEncabezados.appendChild(th);
+    });
+  }
+
+  function formatearValor(valor) {
+    return (valor === null || valor === undefined || valor === "") ? "" : valor;
+  }
+
+  function pintarFilas(filas, idsNuevos = []) {
+    const colspanTotal = columnasActuales.length;
+
+    if (!filas || filas.length === 0) {
+      const mensaje = filtroLoteActual
+        ? `No se encontraron fichas para el lote "${filtroLoteActual}".`
+        : "No hay datos todavía.";
+      cuerpoTabla.innerHTML = `<tr><td colspan="${colspanTotal}" class="vacio">${mensaje}</td></tr>`;
+      return;
+    }
+
+    cuerpoTabla.innerHTML = "";
+    filas.forEach(fila => {
+      const tr = document.createElement("tr");
+      tr.dataset.id = fila[COLUMNA_ID];
+      if (idsNuevos.includes(fila[COLUMNA_ID])) {
+        tr.classList.add("fila-nueva");
+      }
+
+      if (idEnEdicion === fila[COLUMNA_ID]) {
+        pintarFilaEdicion(tr, fila);
+      } else {
+        pintarFilaNormal(tr, fila);
+      }
+
+      cuerpoTabla.appendChild(tr);
+    });
+  }
+
+  // Vuelve a pintar la tabla aplicando el filtro de búsqueda de lote
+  // (si hay uno activo) sobre los datos ya cargados.
+  function repintar(idsNuevos = []) {
+    pintarFilas(aplicarFiltroLote(ultimasFilas), idsNuevos);
+  }
+
+  function pintarFilaNormal(tr, fila) {
+    columnasActuales.forEach(col => {
+      const td = document.createElement("td");
+      td.textContent = formatearValor(fila[col.clave]);
+      tr.appendChild(td);
+    });
+
+    // Mientras no se esté editando ninguna fila, se puede hacer clic
+    // sobre una fila para seleccionarla como la ficha a editar.
+    if (idEnEdicion === null) {
+      tr.classList.add("seleccionable");
+      if (filaSeleccionadaId === fila[COLUMNA_ID]) {
+        tr.classList.add("seleccionada");
+      }
+      tr.addEventListener("click", () => {
+        filaSeleccionadaId = (filaSeleccionadaId === fila[COLUMNA_ID]) ? null : fila[COLUMNA_ID];
+        repintar();
+      });
+    }
+  }
+
+  // ------------------------------------------------------------
+  // Pegado estilo Excel: si el usuario copia varias celdas seguidas
+  // (por ejemplo desde Excel: "1<TAB>5<TAB>31<TAB>28") y las pega en
+  // un input de la fila en edición, los valores se reparten
+  // automáticamente en ese input y en los siguientes, en el mismo
+  // orden de las columnas de la tabla.
+  // ------------------------------------------------------------
+  function separarValoresPegados(texto) {
+    // Excel copia las celdas separadas por tabulaciones.
+    // Si además se copiaron varias filas, cada fila viene separada
+    // por salto de línea: solo tomamos la primera fila pegada.
+    const primeraFila = texto.split(/\r\n|\r|\n/)[0];
+    let valores = primeraFila.split("\t");
+
+    // Si no había tabulaciones reales (por ejemplo se pegó texto
+    // separado con espacios), lo separamos por espacios múltiples.
+    if (valores.length === 1) {
+      valores = primeraFila.trim().split(/\s+/);
+    }
+
+    return valores.map(v => v.trim());
+  }
+
+  function manejarPegadoExcel(evento, inputActual, tr) {
+    const texto = (evento.clipboardData || window.clipboardData).getData("text");
+    const valores = separarValoresPegados(texto);
+
+    // Si solo hay un valor, dejamos que el navegador lo pegue normal.
+    if (valores.length <= 1) return;
+
+    evento.preventDefault();
+
+    const inputsFila = Array.from(tr.querySelectorAll("input[data-clave]"));
+    const indiceInicial = inputsFila.indexOf(inputActual);
+    if (indiceInicial === -1) return;
+
+    valores.forEach((valor, i) => {
+      const input = inputsFila[indiceInicial + i];
+      if (input) input.value = valor;
+    });
+  }
+
+  function pintarFilaEdicion(tr, fila) {
+    columnasActuales.forEach(col => {
+      const td = document.createElement("td");
+      if (col.clave === COLUMNA_ID) {
+        // El id no se edita
+        td.textContent = formatearValor(fila[col.clave]);
+      } else {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = formatearValor(fila[col.clave]);
+        input.dataset.clave = col.clave;
+        input.addEventListener("paste", (evento) => manejarPegadoExcel(evento, input, tr));
+        td.appendChild(input);
+      }
+      tr.appendChild(td);
+    });
+  }
+
+  async function guardarFila(tr, fila) {
+    const inputs = tr.querySelectorAll("input[data-clave]");
+    const cambios = {};
+    inputs.forEach(input => {
+      let valor = input.value;
+      // Si el campo estaba vacío antes y sigue vacío, mándalo como null
+      if (valor === "") valor = null;
+      cambios[input.dataset.clave] = valor;
+    });
+
+    estado.textContent = "Guardando...";
+
+    const { error } = await cliente
+      .from(NOMBRE_TABLA)
+      .update(cambios)
+      .eq(COLUMNA_ID, fila[COLUMNA_ID]);
+
+    if (error) {
+      estado.textContent = "Error al guardar: " + error.message;
+      console.error(error);
+      alert("No se pudo guardar el cambio: " + error.message);
+      return;
+    }
+
+    idEnEdicion = null;
+    filaSeleccionadaId = null;
+    actualizarBotonesEdicion();
+    await cargarDatos();
+  }
+
+  async function descargarExcel() {
+    if (!ultimasFilas || ultimasFilas.length === 0) {
+      alert("No hay datos para descargar todavía.");
+      return;
+    }
+
+    const libro = new ExcelJS.Workbook();
+    const hoja = libro.addWorksheet("Produccion");
+
+    // Columnas: mismo orden que la tabla en pantalla, encabezado en mayúsculas
+    hoja.columns = columnasActuales.map(col => ({
+      header: String(col.etiqueta).toUpperCase(),
+      key: col.clave,
+      width: Math.max(10, String(col.etiqueta).length + 4)
+    }));
+
+    ultimasFilas.forEach(fila => {
+      const filaExcel = {};
+      columnasActuales.forEach(col => {
+        filaExcel[col.clave] = formatearValor(fila[col.clave]);
+      });
+      hoja.addRow(filaExcel);
+    });
+
+    // Encabezado: fondo azul marino, texto blanco, negrita (igual que la tabla)
+    const filaEncabezado = hoja.getRow(1);
+    filaEncabezado.eachCell(celda => {
+      celda.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E2A44" } };
+      celda.alignment = { vertical: "middle", horizontal: "center" };
+      celda.border = {
+        top: { style: "thin", color: { argb: "FF333333" } },
+        left: { style: "thin", color: { argb: "FF333333" } },
+        bottom: { style: "thin", color: { argb: "FF333333" } },
+        right: { style: "thin", color: { argb: "FF333333" } }
+      };
+    });
+    filaEncabezado.height = 20;
+
+    // Filas de datos: texto negro, filas alternadas (igual que la tabla)
+    for (let i = 2; i <= hoja.rowCount; i++) {
+      const fila = hoja.getRow(i);
+      const esPar = i % 2 === 0;
+      fila.eachCell({ includeEmpty: true }, celda => {
+        celda.font = { color: { argb: "FF000000" } };
+        celda.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: esPar ? "FFEEF1F6" : "FFFFFFFF" }
+        };
+        celda.border = {
+          top: { style: "thin", color: { argb: "FFCCCCCC" } },
+          left: { style: "thin", color: { argb: "FFCCCCCC" } },
+          bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+          right: { style: "thin", color: { argb: "FFCCCCCC" } }
+        };
+      });
+    }
+
+    hoja.views = [{ state: "frozen", ySplit: 1 }];
+
+    const buffer = await libro.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+
+    const fechaArchivo = new Date().toISOString().slice(0, 10);
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = `registro_produccion_${fechaArchivo}.xlsx`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    document.body.removeChild(enlace);
+    URL.revokeObjectURL(url);
+  }
+
+  async function cargarDatos(idsNuevos = []) {
+    estado.textContent = "Cargando datos...";
+    const { data, error } = await cliente
+      .from(NOMBRE_TABLA)
+      .select("*")
+      .order(COLUMNA_ID, { ascending: true });
+
+    if (error) {
+      estado.textContent = "Error al cargar: " + error.message;
+      console.error(error);
+      return;
+    }
+
+    ultimasFilas = data || [];
+
+    // Detecta las columnas reales la primera vez que llegan datos
+    // (o si vienen columnas nuevas que antes no existían)
+    if (ultimasFilas.length > 0) {
+      const clavesReales = filtrarOcultas(Object.keys(ultimasFilas[0]));
+      const clavesActuales = columnasActuales.map(c => c.clave);
+      const sonDistintas =
+        clavesReales.length !== clavesActuales.length ||
+        clavesReales.some(c => !clavesActuales.includes(c));
+
+      if (sonDistintas) {
+        const clavesOrdenadas = ordenarClaves(clavesReales);
+        columnasActuales = clavesOrdenadas.map(clave => ({
+          clave,
+          etiqueta: obtenerEtiqueta(clave)
+        }));
+        pintarEncabezados();
+      }
+    }
+
+    repintar(idsNuevos);
+    estado.textContent = "Actualizado: " + new Date().toLocaleTimeString();
+  }
+
+  // Carga inicial
+  cargarDatos();
+
+  // Botón manual
+  btnRecargar.addEventListener("click", () => cargarDatos());
+  btnDescargarExcel.addEventListener("click", () => descargarExcel());
+
+  // ------------------------------------------------------------
+  // Botón global "Editar": primero hay que seleccionar una fila
+  // haciendo clic sobre ella (queda resaltada); recién entonces el
+  // botón "Editar" muestra los inputs de esa fila. Mientras se edita,
+  // aparecen los botones "Guardar" y "Cancelar" en la barra en lugar
+  // del botón "Editar".
+  // ------------------------------------------------------------
+  function actualizarBotonesEdicion() {
+    const editando = idEnEdicion !== null;
+    btnEditar.style.display = editando ? "none" : "";
+    btnGuardarFila.style.display = editando ? "" : "none";
+    btnCancelarFila.style.display = editando ? "" : "none";
+  }
+
+  btnEditar.addEventListener("click", () => {
+    if (!filaSeleccionadaId) {
+      alert("Primero haz clic sobre la fila que quieres editar.");
+      return;
+    }
+    idEnEdicion = filaSeleccionadaId;
+    actualizarBotonesEdicion();
+    repintar();
+  });
+
+  btnGuardarFila.addEventListener("click", () => {
+    if (idEnEdicion === null) return;
+    const tr = cuerpoTabla.querySelector(`tr[data-id="${idEnEdicion}"]`);
+    const fila = ultimasFilas.find(f => String(f[COLUMNA_ID]) === String(idEnEdicion));
+    if (tr && fila) guardarFila(tr, fila);
+  });
+
+  btnCancelarFila.addEventListener("click", () => {
+    idEnEdicion = null;
+    filaSeleccionadaId = null;
+    actualizarBotonesEdicion();
+    repintar();
+  });
+
+  // ------------------------------------------------------------
+  // Botón "Buscar Lote": abre un cuadro donde se escribe el número
+  // de lote y, al presionar "Buscar", la tabla solo muestra las
+  // fichas cuyo lote coincida (coincidencia parcial, sin importar
+  // mayúsculas/minúsculas). "Mostrar todos" quita el filtro.
+  // ------------------------------------------------------------
+  function abrirModalBusqueda() {
+    inputBuscarLote.value = filtroLoteActual || "";
+    modalBuscarLote.classList.remove("oculto");
+    inputBuscarLote.focus();
+  }
+
+  function cerrarModalBusqueda() {
+    modalBuscarLote.classList.add("oculto");
+  }
+
+  function ejecutarBusquedaLote() {
+    const texto = inputBuscarLote.value.trim();
+    filtroLoteActual = texto === "" ? null : texto;
+    btnLimpiarBusqueda.style.display = filtroLoteActual ? "" : "none";
+    cerrarModalBusqueda();
+    repintar();
+  }
+
+  btnBuscarLote.addEventListener("click", abrirModalBusqueda);
+  btnCerrarBusqueda.addEventListener("click", cerrarModalBusqueda);
+  btnEjecutarBusqueda.addEventListener("click", ejecutarBusquedaLote);
+
+  inputBuscarLote.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter") ejecutarBusquedaLote();
+  });
+
+  // Cierra el modal si se hace clic fuera del cuadro blanco.
+  modalBuscarLote.addEventListener("click", (evento) => {
+    if (evento.target === modalBuscarLote) cerrarModalBusqueda();
+  });
+
+  btnLimpiarBusqueda.addEventListener("click", () => {
+    filtroLoteActual = null;
+    btnLimpiarBusqueda.style.display = "none";
+    repintar();
+  });
+
+  // ------------------------------------------------------------
+  // Actualización automática en tiempo real: cada vez que se
+  // inserta, edita o borra una fila en Supabase, esta tabla se
+  // refresca sola sin que el usuario haga nada.
+  // Requiere tener Realtime habilitado para esta tabla en Supabase
+  // (Database -> Replication -> activar la tabla).
+  // ------------------------------------------------------------
+  cliente
+    .channel("cambios-registro-produccion")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: NOMBRE_TABLA },
+      (payload) => {
+        const idNuevo = payload.new && payload.new[COLUMNA_ID] ? [payload.new[COLUMNA_ID]] : [];
+        cargarDatos(idNuevo);
+      }
+    )
+    .subscribe();
+
+  // Respaldo: si por algún motivo realtime no está activado,
+  // igual refresca cada 30 segundos (a menos que se esté editando).
+  setInterval(() => {
+    if (idEnEdicion === null) cargarDatos();
+  }, 30000);
+</script>
+
+</body>
+</html>
