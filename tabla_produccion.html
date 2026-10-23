@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registro de Producción</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar button {
+    background: #1e2a44;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .toolbar button:hover { background: #2d3e63; }
+
+  .toolbar button.excel { background: #1e7a3c; }
+  .toolbar button.excel:hover { background: #26983f; }
+
+  .toolbar button.filtros { background: #7e57c2; }
+  .toolbar button.filtros:hover { background: #6a45ad; }
+
+  .toolbar button.buscar-lote { background: #4A90E2; }
+  .toolbar button.buscar-lote:hover { background: #3a7bc8; }
+
+  .toolbar button.limpiar-busqueda { background: #6c7a89; }
+  .toolbar button.limpiar-busqueda:hover { background: #58636f; }
+
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal-overlay.oculto {
+    display: none;
+  }
+
+  .modal-caja {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    width: 320px;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-caja h3 {
+    margin: 0 0 14px 0;
+    color: #1e2a44;
+  }
+
+  .modal-caja label {
+    display: block;
+    font-size: 13px;
+    color: #333;
+    margin: 12px 0 4px 0;
+  }
+
+  .modal-caja input[type="text"],
+  .modal-caja input[type="date"],
+  .modal-caja select {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+  .modal-botones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .modal-botones button {
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #fff;
+  }
+
+  .modal-buscar { background: #4A90E2; }
+  .modal-buscar:hover { background: #3a7bc8; }
+  .modal-cerrar { background: #94a3b8; }
+  .modal-cerrar:hover { background: #7c8ba1; }
+  .modal-limpiar { background: #f0ad4e; }
+  .modal-limpiar:hover { background: #ec9c2e; }
+
+  .estado {
+    font-size: 13px;
+    color: #555;
+  }
+
+  .tabla-wrapper {
+    overflow-x: auto;
+    border: 1px solid #333;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 1300px;
+    font-size: 13px;
+    background: #fff;
+  }
+
+  thead th {
+    background: #1e2a44;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 8px 10px;
+    border: 1px solid #333;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    text-transform: uppercase;
+  }
+
+  tbody td {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    color: #000000;
+    white-space: nowrap;
+  }
+
+  tbody tr:nth-child(even) { background: #eef1f6; }
+  tbody tr:nth-child(odd)  { background: #ffffff; }
+
+  tbody tr.fila-nueva {
+    animation: resaltar 2s ease-out;
+  }
+
+  @keyframes resaltar {
+    from { background: #fff3b0; }
+    to   { background: inherit; }
+  }
+
+  /* Fila TOTAL (aparece cuando hay filtros activos) */
+  tbody tr.fila-total td {
+    background: #1e2a44 !important;
+    color: #ffffff;
+    font-weight: bold;
+  }
+
+  /* Celdas que se editan con doble clic / doble toque */
+  tbody tr.editable {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  tbody td.celda-editando {
+    background: #fff8dc !important;
+    outline: 2px solid #f0ad4e;
+    outline-offset: -2px;
+  }
+
+  tbody td.celda-editando input {
+    font-size: 13px;
+    padding: 4px 6px;
+  }
+
+  /* En pantallas táctiles se usa letra de 16px para que el celular no
+     haga zoom automático al tocar el campo */
+  @media (pointer: coarse) {
+    tbody td.celda-editando input { font-size: 16px; }
+  }
+
+  /* Botones ✕ / ✓: salen debajo del campo que se está editando */
+  .acciones-edicion {
+    display: flex;
+    gap: 6px;
+    margin-top: 5px;
+  }
+
+  .btn-edicion {
+    border: none;
+    color: #fff;
+    width: 30px;
+    height: 28px;
+    padding: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .btn-edicion.cancelar { background: #c0392b; }
+  .btn-edicion.cancelar:hover { background: #a93226; }
+  .btn-edicion.guardar { background: #1e7a3c; }
+  .btn-edicion.guardar:hover { background: #26983f; }
+  .btn-edicion:disabled { opacity: 0.5; cursor: default; }
+
+  /* Menú desplegable de selección múltiple (preparaciones) */
+  .multi-boton {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    color: #000;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .multi-boton:disabled { opacity: 0.6; cursor: default; }
+
+  .multi-panel {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 4px;
+    background: #fff;
+  }
+
+  .multi-panel.oculto { display: none; }
+
+  .multi-acciones {
+    display: flex;
+    gap: 14px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .multi-acciones button {
+    background: none;
+    border: none;
+    color: #4A90E2;
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+  }
+
+  .multi-lista {
+    max-height: 170px;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+
+  .modal-caja .multi-lista label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .modal-caja .multi-lista label:hover { background: #eef1f6; }
+
+  .vacio {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+  }
+
+  tbody td input {
+    width: 90px;
+    font-size: 12px;
+    padding: 2px 4px;
+    box-sizing: border-box;
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button id="btnRecargar">Actualizar ahora</button>
+  <button id="btnDescargarExcel" class="excel">Descargar Excel</button>
+  <button id="btnBuscarLote" class="buscar-lote">Buscar Lote</button>
+  <button id="btnFiltros" class="filtros">Filtros</button>
+  <button id="btnLimpiarBusqueda" class="limpiar-busqueda" style="display:none;">Mostrar todos</button>
+  <span class="estado" id="estado">Cargando datos...</span>
+</div>
+
+<div id="modalBuscarLote" class="modal-overlay oculto">
+  <div class="modal-caja">
+    <h3>Buscar Lote</h3>
+    <input type="text" id="inputBuscarLote" placeholder="Escribe el número de lote...">
+    <div class="modal-botones">
+      <button id="btnEjecutarBusqueda" class="modal-buscar">Buscar</button>
+      <button id="btnCerrarBusqueda" class="modal-cerrar">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalFiltros" class="modal-overlay oculto">
+  <div class="modal-caja">
+    <h3>Filtros</h3>
+    <label for="inputFiltroFechaDesde">Fecha inicial</label>
+    <input type="date" id="inputFiltroFechaDesde">
+    <label for="inputFiltroFechaHasta">Fecha final</label>
+    <input type="date" id="inputFiltroFechaHasta">
+    <label for="btnPreparaciones">Preparaciones</label>
+    <button type="button" id="btnPreparaciones" class="multi-boton">
+      <span id="resumenPreparaciones">Todas las preparaciones</span>
+      <span>▾</span>
+    </button>
+    <div id="panelPreparaciones" class="multi-panel oculto">
+      <div class="multi-acciones">
+        <button type="button" id="btnMarcarTodasPrep">Marcar todas</button>
+        <button type="button" id="btnQuitarPrep">Quitar selección</button>
+      </div>
+      <div id="listaPreparaciones" class="multi-lista"></div>
+    </div>
+    <div class="modal-botones">
+      <button id="btnAplicarFiltros" class="modal-buscar">Aplicar</button>
+      <button id="btnLimpiarFiltros" class="modal-limpiar">Limpiar</button>
+      <button id="btnCerrarFiltros" class="modal-cerrar">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tabla-wrapper">
+  <table>
+    <thead>
+      <tr id="filaEncabezados">
+        <th>Cargando columnas...</th>
+      </tr>
+    </thead>
+    <tbody id="cuerpoTabla">
+      <tr><td class="vacio">Cargando...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  // ============================================================
+  // CONFIGURACION: reemplaza con los datos de tu proyecto Supabase
+  // (Project Settings -> API)
+  // ============================================================
+  const SUPABASE_URL = "https://eqbzvxtxvrzrbnbfhslk.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_xOyo_f01vHWQbXUI9wZuSQ_MW8qH0PD";
+  const NOMBRE_TABLA = "registro_produccion";
+  const COLUMNA_ID = "id"; // nombre real de la columna llave primaria en Supabase
+
+  const { createClient } = supabase;
+  const cliente = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const cuerpoTabla = document.getElementById("cuerpoTabla");
+  const filaEncabezados = document.getElementById("filaEncabezados");
+  const estado = document.getElementById("estado");
+  const btnRecargar = document.getElementById("btnRecargar");
+  const btnDescargarExcel = document.getElementById("btnDescargarExcel");
+  const btnBuscarLote = document.getElementById("btnBuscarLote");
+  const btnFiltros = document.getElementById("btnFiltros");
+  const btnLimpiarBusqueda = document.getElementById("btnLimpiarBusqueda");
+  const modalBuscarLote = document.getElementById("modalBuscarLote");
+  const inputBuscarLote = document.getElementById("inputBuscarLote");
+  const btnEjecutarBusqueda = document.getElementById("btnEjecutarBusqueda");
+  const btnCerrarBusqueda = document.getElementById("btnCerrarBusqueda");
+  const modalFiltros = document.getElementById("modalFiltros");
+  const inputFiltroFechaDesde = document.getElementById("inputFiltroFechaDesde");
+  const inputFiltroFechaHasta = document.getElementById("inputFiltroFechaHasta");
+  const btnPreparaciones = document.getElementById("btnPreparaciones");
+  const resumenPreparaciones = document.getElementById("resumenPreparaciones");
+  const panelPreparaciones = document.getElementById("panelPreparaciones");
+  const listaPreparaciones = document.getElementById("listaPreparaciones");
+  const btnMarcarTodasPrep = document.getElementById("btnMarcarTodasPrep");
+  const btnQuitarPrep = document.getElementById("btnQuitarPrep");
+  const btnAplicarFiltros = document.getElementById("btnAplicarFiltros");
+  const btnLimpiarFiltros = document.getElementById("btnLimpiarFiltros");
+  const btnCerrarFiltros = document.getElementById("btnCerrarFiltros");
+
+  // ------------------------------------------------------------
+  // Antes, las columnas venían escritas "a mano" (COLUMNAS = [...])
+  // y tenían que coincidir EXACTAMENTE (mayúsculas/minúsculas
+  // incluidas) con los nombres reales de columnas en Supabase.
+  // Como no coincidían, solo aparecía el "id" (la única que sí
+  // coincidía) y el resto salía vacío.
+  //
+  // Ahora las columnas se detectan automáticamente a partir de los
+  // datos que realmente devuelve Supabase, así que siempre se ven
+  // sin importar cómo estén escritas en la base de datos.
+  // ------------------------------------------------------------
+
+  // Etiquetas "bonitas" opcionales para mostrar en el encabezado.
+  // La clave debe estar en minúsculas y sin espacios/símbolos.
+  const ETIQUETAS = {
+    id: "Id",
+    ubicacion: "Ubicacion",
+    fraccion: "Fraccion",
+    clienteopto: "CLIENTE O PTO",
+    lote: "LOTE",
+    qty: "Qty",
+    preparacion: "PREPARACION",
+    obs: "Obs",
+    diasprod: "DIAS/PROD",
+    fecha: "FECHA",
+    porcentajeh: "%H",
+    h: "%H",
+    igtotal: "IGTotal",
+    igparcial: "IG Parcial",
+    iig: "II G",
+    brp: "BRP",
+    faltas: "FALTAS",
+    m18: "M 18",
+    m17: "M 17",
+    m16: "M 16",
+    m15: "M 15",
+    m14: "M 14",
+    m13: "M 13",
+    m12: "M 12",
+    m0: "0"
+  };
+
+  function normalizar(txt) {
+    return String(txt).toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+
+  function obtenerEtiqueta(clave) {
+    return ETIQUETAS[normalizar(clave)] || clave;
+  }
+
+  // ------------------------------------------------------------
+  // Orden fijo en el que se deben mostrar las columnas, sin
+  // importar el orden en que Supabase las devuelva. Las claves
+  // están normalizadas (minúsculas, sin espacios ni símbolos).
+  // Cualquier columna que llegue y no esté en esta lista se
+  // agrega al final, después de todas las conocidas.
+  // ------------------------------------------------------------
+  const ORDEN_COLUMNAS = [
+    "id",
+    "fecha",
+    "ubicacion",
+    "fraccion",
+    "qty",
+    "clienteopto",
+    "lote",
+    "preparacion",
+    "obs",
+    "porcentajeh",
+    "h",
+    "faltas",
+    "igtotal",
+    "igparcial",
+    "iig",
+    "brp",
+    "m18",
+    "m17",
+    "m16",
+    "m15",
+    "m14",
+    "m13",
+    "m12",
+    "m0"
+  ];
+
+  function ordenarClaves(claves) {
+    return [...claves].sort((a, b) => {
+      const posA = ORDEN_COLUMNAS.indexOf(normalizar(a));
+      const posB = ORDEN_COLUMNAS.indexOf(normalizar(b));
+      const rangoA = posA === -1 ? ORDEN_COLUMNAS.length : posA;
+      const rangoB = posB === -1 ? ORDEN_COLUMNAS.length : posB;
+      return rangoA - rangoB;
+    });
+  }
+
+  // ------------------------------------------------------------
+  // Columnas que existen en Supabase pero que NO se deben mostrar
+  // en esta tabla (siguen guardadas en la base de datos, solo se
+  // ocultan de la vista). Usar la clave normalizada.
+  // ------------------------------------------------------------
+  const COLUMNAS_OCULTAS = ["diasprod"];
+
+  function filtrarOcultas(claves) {
+    return claves.filter(clave => !COLUMNAS_OCULTAS.includes(normalizar(clave)));
+  }
+
+  let columnasActuales = [];  // [{clave, etiqueta}]
+  let ultimasFilas = [];      // datos crudos cargados de Supabase
+  let idEnEdicion = null;         // id de la fila que tiene una celda en edición
+  let claveEnEdicion = null;      // columna de la celda que se está editando
+  let borradorEdicion = null;     // texto escrito en la celda en edición (se conserva si la tabla se refresca)
+  let filtroLoteActual = null;    // texto de búsqueda de lote activo (o null si no hay filtro)
+  let filtroFechaDesde = null;    // fecha inicial "AAAA-MM-DD" del filtro (o null)
+  let filtroFechaHasta = null;    // fecha final "AAAA-MM-DD" del filtro (o null)
+  let filtroPreparacionesActual = []; // preparaciones elegidas en el filtro (vacío = todas)
+
+  // Busca, entre las columnas detectadas, la que corresponde a un nombre
+  // ("lote", "fecha", "preparacion"...), sin importar cómo esté escrita
+  // exactamente en Supabase.
+  function obtenerClavePorNombre(nombre) {
+    const col = columnasActuales.find(c => normalizar(c.clave) === nombre);
+    return col ? col.clave : null;
+  }
+
+  // Convierte distintos formatos de fecha a "AAAA-MM-DD" para poder
+  // compararla con la fecha elegida en el filtro. Si la fecha viene como
+  // "23/10/2026" se interpreta como día/mes/año.
+  function normalizarFecha(valor) {
+    if (valor === null || valor === undefined) return null;
+    const texto = String(valor).trim();
+    if (texto === "") return null;
+
+    let m = texto.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+    if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+
+    m = texto.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/);
+    if (m) {
+      let dia = parseInt(m[1], 10);
+      let mes = parseInt(m[2], 10);
+      if (mes > 12 && dia <= 12) [dia, mes] = [mes, dia]; // venía mes/día/año
+      let anio = m[3];
+      if (anio.length === 2) anio = "20" + anio;
+      return `${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+    }
+
+    const d = new Date(texto);
+    if (!isNaN(d.getTime())) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+    return null;
+  }
+
+  function hayFiltrosActivos() {
+    return !!(filtroLoteActual || filtroFechaDesde || filtroFechaHasta || filtroPreparacionesActual.length > 0);
+  }
+
+  function describirFiltros() {
+    const partes = [];
+    if (filtroLoteActual) partes.push(`lote "${filtroLoteActual}"`);
+    if (filtroFechaDesde && filtroFechaHasta) partes.push(`fecha del ${filtroFechaDesde} al ${filtroFechaHasta}`);
+    else if (filtroFechaDesde) partes.push(`fecha desde ${filtroFechaDesde}`);
+    else if (filtroFechaHasta) partes.push(`fecha hasta ${filtroFechaHasta}`);
+    if (filtroPreparacionesActual.length > 0) {
+      partes.push(`preparación ${filtroPreparacionesActual.map(p => `"${p}"`).join(" o ")}`);
+    }
+    return partes.join(", ");
+  }
+
+  // Muestra/oculta "Mostrar todos" y indica cuántos filtros del botón
+  // "Filtros" (fecha y preparación) están activos.
+  function actualizarIndicadoresFiltros() {
+    btnLimpiarBusqueda.style.display = hayFiltrosActivos() ? "" : "none";
+    const cantidad = ((filtroFechaDesde || filtroFechaHasta) ? 1 : 0) + (filtroPreparacionesActual.length > 0 ? 1 : 0);
+    btnFiltros.textContent = cantidad > 0 ? `Filtros (${cantidad})` : "Filtros";
+  }
+
+  // Indica si una fila cumple todos los filtros activos: lote, rango de
+  // fechas (inicial y/o final, ambas incluidas) y preparación.
+  function coincideConFiltros(fila) {
+    const claveLote = obtenerClavePorNombre("lote");
+    const claveFecha = obtenerClavePorNombre("fecha");
+    const clavePrep = obtenerClavePorNombre("preparacion");
+
+    if (filtroLoteActual && claveLote) {
+      const termino = filtroLoteActual.trim().toLowerCase();
+      if (termino && !String(fila[claveLote] ?? "").toLowerCase().includes(termino)) return false;
+    }
+
+    if ((filtroFechaDesde || filtroFechaHasta) && claveFecha) {
+      const fecha = normalizarFecha(fila[claveFecha]);
+      if (!fecha) return false;
+      if (filtroFechaDesde && fecha < filtroFechaDesde) return false;
+      if (filtroFechaHasta && fecha > filtroFechaHasta) return false;
+    }
+
+    if (filtroPreparacionesActual.length > 0 && clavePrep) {
+      const valor = String(fila[clavePrep] ?? "").trim().toLowerCase();
+      if (!filtroPreparacionesActual.some(p => p.trim().toLowerCase() === valor)) return false;
+    }
+
+    return true;
+  }
+
+  // Aplica todos los filtros activos sobre un arreglo de filas. La fila
+  // que se está editando siempre se mantiene visible.
+  function aplicarFiltros(filas) {
+    if (!hayFiltrosActivos()) return filas;
+    return filas.filter(fila =>
+      (idEnEdicion !== null && fila[COLUMNA_ID] === idEnEdicion) || coincideConFiltros(fila)
+    );
+  }
+
+  // Convierte el valor de una celda (número o texto como "1.250", "12,5"
+  // o "12.5") en número. Lo que no sea número cuenta como 0.
+  function aNumero(valor) {
+    if (typeof valor === "number") return isFinite(valor) ? valor : 0;
+    let t = String(valor ?? "").trim().replace(/\s/g, "");
+    if (t === "") return 0;
+
+    if (t.includes(".") && t.includes(",")) {
+      // el último separador que aparece es el decimal
+      if (t.lastIndexOf(",") > t.lastIndexOf(".")) t = t.replace(/\./g, "").replace(",", ".");
+      else t = t.replace(/,/g, "");
+    } else if (t.includes(",")) {
+      t = t.replace(",", ".");                       // coma decimal: 12,5
+    } else if (/^\d{1,3}(\.\d{3})+$/.test(t)) {
+      t = t.replace(/\./g, "");                      // punto de miles: 1.250
+    }
+
+    const n = parseFloat(t.replace(/[^0-9.\-]/g, ""));
+    return isNaN(n) ? 0 : n;
+  }
+
+  function formatearNumero(n) {
+    return n.toLocaleString("es-CO", { maximumFractionDigits: 2 });
+  }
+
+  // Suma la columna QTY de las filas indicadas.
+  function sumarQty(filas, claveQty) {
+    return filas.reduce((suma, fila) => suma + aNumero(fila[claveQty]), 0);
+  }
+
+  function pintarEncabezados() {
+    filaEncabezados.innerHTML = "";
+    columnasActuales.forEach(col => {
+      const th = document.createElement("th");
+      th.textContent = col.etiqueta;
+      filaEncabezados.appendChild(th);
+    });
+  }
+
+  function formatearValor(valor) {
+    return (valor === null || valor === undefined || valor === "") ? "" : valor;
+  }
+
+  function pintarFilas(filas, idsNuevos = []) {
+    const colspanTotal = columnasActuales.length || 1;
+
+    if (!filas || filas.length === 0) {
+      const mensaje = hayFiltrosActivos()
+        ? `No se encontraron registros con los filtros aplicados (${describirFiltros()}).`
+        : "No hay datos todavía.";
+      cuerpoTabla.innerHTML = "";
+      const trVacio = document.createElement("tr");
+      const tdVacio = document.createElement("td");
+      tdVacio.colSpan = colspanTotal;
+      tdVacio.className = "vacio";
+      tdVacio.textContent = mensaje;
+      trVacio.appendChild(tdVacio);
+      cuerpoTabla.appendChild(trVacio);
+      return;
+    }
+
+    cuerpoTabla.innerHTML = "";
+    filas.forEach(fila => {
+      const tr = document.createElement("tr");
+      tr.dataset.id = fila[COLUMNA_ID];
+      if (idsNuevos.includes(fila[COLUMNA_ID])) {
+        tr.classList.add("fila-nueva");
+      }
+
+      if (idEnEdicion === fila[COLUMNA_ID]) {
+        pintarFilaEdicion(tr, fila);
+      } else {
+        pintarFilaNormal(tr, fila);
+      }
+
+      cuerpoTabla.appendChild(tr);
+    });
+
+    // Con filtros activos se agrega al final una fila "TOTAL" con la suma de QTY
+    if (hayFiltrosActivos()) agregarFilaTotal(filas.filter(f => coincideConFiltros(f)));
+  }
+
+  function agregarFilaTotal(filasQueCoinciden) {
+    const claveQty = obtenerClavePorNombre("qty");
+    if (!claveQty) return;
+
+    const total = sumarQty(filasQueCoinciden, claveQty);
+    const tr = document.createElement("tr");
+    tr.className = "fila-total";
+    columnasActuales.forEach((col, indice) => {
+      const td = document.createElement("td");
+      if (col.clave === claveQty) td.textContent = formatearNumero(total);
+      else if (indice === 0) td.textContent = "TOTAL";
+      tr.appendChild(td);
+    });
+    cuerpoTabla.appendChild(tr);
+  }
+
+  // Devuelve el <tr> que está en pantalla para un id (o null).
+  function obtenerFilaEnPantalla(id) {
+    return Array.from(cuerpoTabla.querySelectorAll("tr")).find(tr => tr.dataset.id === String(id)) || null;
+  }
+
+  // Guarda lo que el usuario lleva escrito en la fila en edición, para que
+  // no se pierda si la tabla se vuelve a pintar (por ejemplo, por una
+  // actualización en tiempo real que llegue mientras se edita).
+  function capturarBorrador() {
+    if (idEnEdicion === null) return;
+    const tr = obtenerFilaEnPantalla(idEnEdicion);
+    if (!tr) return;
+    const input = tr.querySelector("input[data-clave]");
+    if (!input) return;
+    borradorEdicion = input.value;
+  }
+
+  // Vuelve a pintar la tabla aplicando los filtros activos (lote, fecha y
+  // preparación) sobre los datos ya cargados.
+  function repintar(idsNuevos = []) {
+    let claveActiva = null;
+    let seleccion = null;
+
+    if (idEnEdicion !== null) {
+      const sigueExistiendo = ultimasFilas.some(f => String(f[COLUMNA_ID]) === String(idEnEdicion));
+      if (!sigueExistiendo) {
+        // La fila fue borrada por otra persona: se sale del modo edición.
+        idEnEdicion = null;
+        claveEnEdicion = null;
+        borradorEdicion = null;
+      } else {
+        capturarBorrador();
+        const activo = document.activeElement;
+        if (activo && activo.dataset && activo.dataset.clave) {
+          claveActiva = activo.dataset.clave;
+          if (typeof activo.selectionStart === "number") {
+            seleccion = [activo.selectionStart, activo.selectionEnd];
+          }
+        }
+      }
+    }
+
+    pintarFilas(aplicarFiltros(ultimasFilas), idsNuevos);
+
+    // Si se estaba escribiendo en un campo, devuelve el cursor ahí.
+    if (claveActiva && idEnEdicion !== null) {
+      const tr = obtenerFilaEnPantalla(idEnEdicion);
+      const input = tr && Array.from(tr.querySelectorAll("input[data-clave]"))
+        .find(i => i.dataset.clave === claveActiva);
+      if (input) {
+        input.focus();
+        if (seleccion) input.setSelectionRange(seleccion[0], seleccion[1]);
+      }
+    }
+  }
+
+  function pintarFilaNormal(tr, fila) {
+    columnasActuales.forEach(col => {
+      const td = document.createElement("td");
+      td.textContent = formatearValor(fila[col.clave]);
+      tr.appendChild(td);
+    });
+
+    // Doble clic (o doble toque) sobre una celda = editar esa celda.
+    // Los eventos se manejan más abajo, a nivel de toda la tabla.
+    tr.classList.add("editable");
+    tr.title = "Doble clic en una celda para editarla";
+  }
+
+  // ------------------------------------------------------------
+  // Pegado: si se pega texto copiado de varias celdas (por ejemplo desde
+  // Excel), solo se usa el primer valor, porque se está editando una sola
+  // celda. Un texto normal (aunque tenga espacios) se pega tal cual.
+  // ------------------------------------------------------------
+  function manejarPegado(evento, input) {
+    const texto = (evento.clipboardData || window.clipboardData).getData("text");
+    if (!/[\t\r\n]/.test(texto)) return;
+    evento.preventDefault();
+    const primero = texto.split(/\r\n|\r|\n/)[0].split("\t")[0].trim();
+    input.setRangeText(primero, input.selectionStart, input.selectionEnd, "end");
+  }
+
+  function crearBotonesEdicion(alGuardar) {
+    const contenedor = document.createElement("div");
+    contenedor.className = "acciones-edicion";
+
+    const btnCancelar = document.createElement("button");
+    btnCancelar.type = "button";
+    btnCancelar.className = "btn-edicion cancelar";
+    btnCancelar.textContent = "✕";
+    btnCancelar.title = "Cancelar edición";
+    btnCancelar.addEventListener("click", cancelarEdicion);
+
+    const btnGuardar = document.createElement("button");
+    btnGuardar.type = "button";
+    btnGuardar.className = "btn-edicion guardar";
+    btnGuardar.textContent = "✓";
+    btnGuardar.title = "Guardar cambio";
+    btnGuardar.addEventListener("click", alGuardar);
+
+    contenedor.appendChild(btnCancelar);
+    contenedor.appendChild(btnGuardar);
+    return contenedor;
+  }
+
+  // Fila con una celda en edición: todas las celdas se ven normales
+  // menos la que se está editando, que muestra el campo y, debajo, ✕ / ✓.
+  function pintarFilaEdicion(tr, fila) {
+    tr.classList.add("editable");
+    tr.title = "Doble clic en una celda para editarla";
+
+    columnasActuales.forEach(col => {
+      const td = document.createElement("td");
+
+      if (col.clave === claveEnEdicion) {
+        td.classList.add("celda-editando");
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = borradorEdicion !== null ? borradorEdicion : formatearValor(fila[col.clave]);
+        input.dataset.clave = col.clave;
+        // El campo se ajusta al largo del texto para que la tabla no "salte"
+        const ajustarAncho = () => {
+          const caracteres = Math.min(40, Math.max(8, input.value.length + 2));
+          input.style.width = `calc(${caracteres}ch + 16px)`;
+        };
+        ajustarAncho();
+        input.addEventListener("input", ajustarAncho);
+        input.addEventListener("paste", (evento) => manejarPegado(evento, input));
+        // Enter = guardar (✓). Escape = cancelar (✕) se maneja más abajo,
+        // a nivel de toda la página.
+        input.addEventListener("keydown", (evento) => {
+          if (evento.key === "Enter") {
+            evento.preventDefault();
+            guardarCelda(tr, fila, col.clave, input);
+          }
+        });
+        td.appendChild(input);
+        td.appendChild(crearBotonesEdicion(() => guardarCelda(tr, fila, col.clave, input)));
+      } else {
+        td.textContent = formatearValor(fila[col.clave]);
+      }
+
+      tr.appendChild(td);
+    });
+  }
+
+  // Guarda solamente el valor de la celda editada.
+  async function guardarCelda(tr, fila, clave, input) {
+    // Si no cambió nada, simplemente se cierra la edición
+    if (input.value === String(formatearValor(fila[clave]))) {
+      cancelarEdicion();
+      return;
+    }
+
+    // Si el campo queda vacío se manda como null
+    const valor = input.value === "" ? null : input.value;
+
+    const botones = tr.querySelectorAll(".btn-edicion");
+    botones.forEach(b => { b.disabled = true; });
+    estado.textContent = "Guardando...";
+
+    const { error } = await cliente
+      .from(NOMBRE_TABLA)
+      .update({ [clave]: valor })
+      .eq(COLUMNA_ID, fila[COLUMNA_ID]);
+
+    if (error) {
+      estado.textContent = "Error al guardar: " + error.message;
+      console.error(error);
+      botones.forEach(b => { b.disabled = false; });
+      alert("No se pudo guardar el cambio: " + error.message);
+      return;
+    }
+
+    idEnEdicion = null;
+    claveEnEdicion = null;
+    borradorEdicion = null;
+    await cargarDatos();
+  }
+
+  async function descargarExcel() {
+    if (!ultimasFilas || ultimasFilas.length === 0) {
+      alert("No hay datos para descargar todavía.");
+      return;
+    }
+
+    const libro = new ExcelJS.Workbook();
+    const hoja = libro.addWorksheet("Produccion");
+
+    // Columnas: mismo orden que la tabla en pantalla, encabezado en mayúsculas
+    hoja.columns = columnasActuales.map(col => ({
+      header: String(col.etiqueta).toUpperCase(),
+      key: col.clave,
+      width: Math.max(10, String(col.etiqueta).length + 4)
+    }));
+
+    ultimasFilas.forEach(fila => {
+      const filaExcel = {};
+      columnasActuales.forEach(col => {
+        filaExcel[col.clave] = formatearValor(fila[col.clave]);
+      });
+      hoja.addRow(filaExcel);
+    });
+
+    // Encabezado: fondo azul marino, texto blanco, negrita (igual que la tabla)
+    const filaEncabezado = hoja.getRow(1);
+    filaEncabezado.eachCell(celda => {
+      celda.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E2A44" } };
+      celda.alignment = { vertical: "middle", horizontal: "center" };
+      celda.border = {
+        top: { style: "thin", color: { argb: "FF333333" } },
+        left: { style: "thin", color: { argb: "FF333333" } },
+        bottom: { style: "thin", color: { argb: "FF333333" } },
+        right: { style: "thin", color: { argb: "FF333333" } }
+      };
+    });
+    filaEncabezado.height = 20;
+
+    // Filas de datos: texto negro, filas alternadas (igual que la tabla)
+    for (let i = 2; i <= hoja.rowCount; i++) {
+      const fila = hoja.getRow(i);
+      const esPar = i % 2 === 0;
+      fila.eachCell({ includeEmpty: true }, celda => {
+        celda.font = { color: { argb: "FF000000" } };
+        celda.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: esPar ? "FFEEF1F6" : "FFFFFFFF" }
+        };
+        celda.border = {
+          top: { style: "thin", color: { argb: "FFCCCCCC" } },
+          left: { style: "thin", color: { argb: "FFCCCCCC" } },
+          bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+          right: { style: "thin", color: { argb: "FFCCCCCC" } }
+        };
+      });
+    }
+
+    hoja.views = [{ state: "frozen", ySplit: 1 }];
+
+    const buffer = await libro.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+
+    const fechaArchivo = new Date().toISOString().slice(0, 10);
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = `registro_produccion_${fechaArchivo}.xlsx`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    document.body.removeChild(enlace);
+    URL.revokeObjectURL(url);
+  }
+
+  async function cargarDatos(idsNuevos = []) {
+    estado.textContent = "Cargando datos...";
+    const { data, error } = await cliente
+      .from(NOMBRE_TABLA)
+      .select("*")
+      .order(COLUMNA_ID, { ascending: true });
+
+    if (error) {
+      estado.textContent = "Error al cargar: " + error.message;
+      console.error(error);
+      return;
+    }
+
+    ultimasFilas = data || [];
+
+    // Detecta las columnas reales la primera vez que llegan datos
+    // (o si vienen columnas nuevas que antes no existían)
+    if (ultimasFilas.length > 0) {
+      const clavesReales = filtrarOcultas(Object.keys(ultimasFilas[0]));
+      const clavesActuales = columnasActuales.map(c => c.clave);
+      const sonDistintas =
+        clavesReales.length !== clavesActuales.length ||
+        clavesReales.some(c => !clavesActuales.includes(c));
+
+      if (sonDistintas) {
+        const clavesOrdenadas = ordenarClaves(clavesReales);
+        columnasActuales = clavesOrdenadas.map(clave => ({
+          clave,
+          etiqueta: obtenerEtiqueta(clave)
+        }));
+        pintarEncabezados();
+      }
+    }
+
+    repintar(idsNuevos);
+    estado.textContent = "Actualizado: " + new Date().toLocaleTimeString();
+  }
+
+  // Carga inicial
+  cargarDatos();
+
+  // Botón manual
+  btnRecargar.addEventListener("click", () => cargarDatos());
+  btnDescargarExcel.addEventListener("click", () => descargarExcel());
+
+  // ------------------------------------------------------------
+  // Edición por celda: al hacer doble clic (o doble toque con el dedo en
+  // el celular) sobre una celda, solo esa celda se convierte en campo de
+  // texto y debajo aparecen dos botones: ✕ cancela y ✓ guarda ese cambio.
+  // (También funcionan Escape = cancelar y Enter = guardar.)
+  // ------------------------------------------------------------
+  function iniciarEdicion(id, clave) {
+    idEnEdicion = id;
+    claveEnEdicion = clave;
+    borradorEdicion = null;
+    if (window.getSelection) window.getSelection().removeAllRanges();
+    repintar();
+
+    const tr = obtenerFilaEnPantalla(id);
+    const input = tr && tr.querySelector("input[data-clave]");
+    if (input) {
+      // El cursor queda al final del texto, para poder corregirlo sin borrarlo todo
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  }
+
+  function cancelarEdicion() {
+    idEnEdicion = null;
+    claveEnEdicion = null;
+    borradorEdicion = null;
+    repintar();
+  }
+
+  // Decide si la celda tocada se puede empezar a editar.
+  function intentarEditarCelda(td) {
+    const tr = td.closest("tr");
+    if (!tr || !tr.dataset.id) return;            // fila TOTAL o mensaje vacío
+    const col = columnasActuales[td.cellIndex];
+    if (!col || col.clave === COLUMNA_ID) return; // el id no se edita
+
+    const fila = ultimasFilas.find(f => String(f[COLUMNA_ID]) === tr.dataset.id);
+    if (!fila) return;
+
+    if (idEnEdicion !== null) {
+      const esLaMisma = String(idEnEdicion) === String(fila[COLUMNA_ID]) && claveEnEdicion === col.clave;
+      if (!esLaMisma) {
+        estado.textContent = "Termina la edición actual (✓ guardar o ✕ cancelar) antes de editar otra celda.";
+      }
+      return;
+    }
+
+    iniciarEdicion(fila[COLUMNA_ID], col.clave);
+  }
+
+  // Doble clic con el mouse
+  cuerpoTabla.addEventListener("dblclick", (evento) => {
+    const td = evento.target.closest("td");
+    if (td) intentarEditarCelda(td);
+  });
+
+  // Doble toque con el dedo (celular): dos toques seguidos sobre la
+  // misma celda en menos de 400 ms.
+  let ultimoToque = { celda: null, tiempo: 0 };
+  cuerpoTabla.addEventListener("pointerup", (evento) => {
+    if (evento.pointerType !== "touch") return;
+    const td = evento.target.closest("td");
+    const tr = td && td.closest("tr");
+    if (!td || !tr || !tr.dataset.id) return;
+
+    const celda = tr.dataset.id + ":" + td.cellIndex;
+    const ahora = Date.now();
+    if (ultimoToque.celda === celda && ahora - ultimoToque.tiempo < 400) {
+      ultimoToque = { celda: null, tiempo: 0 };
+      intentarEditarCelda(td);
+    } else {
+      ultimoToque = { celda, tiempo: ahora };
+    }
+  });
+
+  // ------------------------------------------------------------
+  // Botón "Buscar Lote": abre un cuadro donde se escribe el número
+  // de lote y, al presionar "Buscar", la tabla solo muestra las
+  // fichas cuyo lote coincida (coincidencia parcial, sin importar
+  // mayúsculas/minúsculas). "Mostrar todos" quita el filtro.
+  // ------------------------------------------------------------
+  function abrirModalBusqueda() {
+    inputBuscarLote.value = filtroLoteActual || "";
+    modalBuscarLote.classList.remove("oculto");
+    inputBuscarLote.focus();
+  }
+
+  function cerrarModalBusqueda() {
+    modalBuscarLote.classList.add("oculto");
+  }
+
+  function ejecutarBusquedaLote() {
+    const texto = inputBuscarLote.value.trim();
+    filtroLoteActual = texto === "" ? null : texto;
+    actualizarIndicadoresFiltros();
+    cerrarModalBusqueda();
+    repintar();
+  }
+
+  btnBuscarLote.addEventListener("click", abrirModalBusqueda);
+  btnCerrarBusqueda.addEventListener("click", cerrarModalBusqueda);
+  btnEjecutarBusqueda.addEventListener("click", ejecutarBusquedaLote);
+
+  inputBuscarLote.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter") ejecutarBusquedaLote();
+  });
+
+  // Cierra el modal si se hace clic fuera del cuadro blanco.
+  modalBuscarLote.addEventListener("click", (evento) => {
+    if (evento.target === modalBuscarLote) cerrarModalBusqueda();
+  });
+
+  // "Mostrar todos" quita todos los filtros (lote, fecha y preparación).
+  btnLimpiarBusqueda.addEventListener("click", () => {
+    filtroLoteActual = null;
+    filtroFechaDesde = null;
+    filtroFechaHasta = null;
+    filtroPreparacionesActual = [];
+    actualizarIndicadoresFiltros();
+    repintar();
+  });
+
+  // ------------------------------------------------------------
+  // Botón "Filtros": abre una ventana emergente con fecha inicial y
+  // fecha final, y un menú desplegable donde se pueden marcar una o varias
+  // de las preparaciones que existen en los datos. "Aplicar" filtra la tabla (se combina con la
+  // búsqueda de lote) y agrega al final una fila TOTAL con la suma de la
+  // columna QTY; "Limpiar" quita las fechas y la preparación.
+  // ------------------------------------------------------------
+  // Texto del botón desplegable según las preparaciones marcadas
+  function actualizarResumenPreparaciones() {
+    const marcadas = Array.from(listaPreparaciones.querySelectorAll("input:checked")).map(i => i.value);
+    if (marcadas.length === 0) resumenPreparaciones.textContent = "Todas las preparaciones";
+    else if (marcadas.length === 1) resumenPreparaciones.textContent = marcadas[0];
+    else resumenPreparaciones.textContent = `${marcadas.length} preparaciones seleccionadas`;
+  }
+
+  function abrirModalFiltros() {
+    const clavePrep = obtenerClavePorNombre("preparacion");
+    listaPreparaciones.innerHTML = "";
+
+    if (clavePrep) {
+      // Preparaciones distintas (sin repetir, sin importar mayúsculas), en orden alfabético
+      const unicas = new Map();
+      ultimasFilas.forEach(fila => {
+        const valor = String(fila[clavePrep] ?? "").trim();
+        if (valor !== "" && !unicas.has(valor.toLowerCase())) unicas.set(valor.toLowerCase(), valor);
+      });
+
+      const elegidas = filtroPreparacionesActual.map(p => p.trim().toLowerCase());
+      Array.from(unicas.values())
+        .sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }))
+        .forEach(valor => {
+          const etiqueta = document.createElement("label");
+          const casilla = document.createElement("input");
+          casilla.type = "checkbox";
+          casilla.value = valor;
+          casilla.checked = elegidas.includes(valor.toLowerCase());
+          casilla.addEventListener("change", actualizarResumenPreparaciones);
+          etiqueta.appendChild(casilla);
+          etiqueta.appendChild(document.createTextNode(valor));
+          listaPreparaciones.appendChild(etiqueta);
+        });
+    }
+
+    btnPreparaciones.disabled = !clavePrep;
+    panelPreparaciones.classList.add("oculto");
+    actualizarResumenPreparaciones();
+
+    inputFiltroFechaDesde.value = filtroFechaDesde || "";
+    inputFiltroFechaHasta.value = filtroFechaHasta || "";
+
+    modalFiltros.classList.remove("oculto");
+    inputFiltroFechaDesde.focus();
+  }
+
+  function cerrarModalFiltros() {
+    modalFiltros.classList.add("oculto");
+  }
+
+  function aplicarFiltrosDesdeModal() {
+    let desde = inputFiltroFechaDesde.value || null;
+    let hasta = inputFiltroFechaHasta.value || null;
+    // Si se pusieron al revés, se intercambian
+    if (desde && hasta && desde > hasta) [desde, hasta] = [hasta, desde];
+    filtroFechaDesde = desde;
+    filtroFechaHasta = hasta;
+
+    const casillas = Array.from(listaPreparaciones.querySelectorAll("input[type=checkbox]"));
+    const marcadas = casillas.filter(c => c.checked).map(c => c.value);
+    // Si están todas marcadas es lo mismo que no filtrar por preparación
+    filtroPreparacionesActual = marcadas.length === casillas.length ? [] : marcadas;
+
+    actualizarIndicadoresFiltros();
+    cerrarModalFiltros();
+    repintar();
+  }
+
+  function limpiarFiltrosDesdeModal() {
+    filtroFechaDesde = null;
+    filtroFechaHasta = null;
+    filtroPreparacionesActual = [];
+    actualizarIndicadoresFiltros();
+    cerrarModalFiltros();
+    repintar();
+  }
+
+  // Abre / cierra la lista de preparaciones y atajos para marcar o quitar todas
+  btnPreparaciones.addEventListener("click", () => {
+    panelPreparaciones.classList.toggle("oculto");
+  });
+
+  btnMarcarTodasPrep.addEventListener("click", () => {
+    listaPreparaciones.querySelectorAll("input[type=checkbox]").forEach(c => { c.checked = true; });
+    actualizarResumenPreparaciones();
+  });
+
+  btnQuitarPrep.addEventListener("click", () => {
+    listaPreparaciones.querySelectorAll("input[type=checkbox]").forEach(c => { c.checked = false; });
+    actualizarResumenPreparaciones();
+  });
+
+  btnFiltros.addEventListener("click", abrirModalFiltros);
+  btnAplicarFiltros.addEventListener("click", aplicarFiltrosDesdeModal);
+  btnLimpiarFiltros.addEventListener("click", limpiarFiltrosDesdeModal);
+  btnCerrarFiltros.addEventListener("click", cerrarModalFiltros);
+
+  [inputFiltroFechaDesde, inputFiltroFechaHasta].forEach(input => {
+    input.addEventListener("keydown", (evento) => {
+      if (evento.key === "Enter") aplicarFiltrosDesdeModal();
+    });
+  });
+
+  // Cierra la ventana si se hace clic fuera del cuadro blanco.
+  modalFiltros.addEventListener("click", (evento) => {
+    if (evento.target === modalFiltros) cerrarModalFiltros();
+  });
+
+  // Escape: cierra la ventana emergente que esté abierta o, si no hay
+  // ninguna, cancela la edición de la fila (igual que el botón ✕).
+  document.addEventListener("keydown", (evento) => {
+    if (evento.key !== "Escape") return;
+    const hayModalAbierto =
+      !modalBuscarLote.classList.contains("oculto") || !modalFiltros.classList.contains("oculto");
+    if (hayModalAbierto) {
+      cerrarModalBusqueda();
+      cerrarModalFiltros();
+    } else if (idEnEdicion !== null) {
+      cancelarEdicion();
+    }
+  });
+
+  // ------------------------------------------------------------
+  // Actualización automática en tiempo real: cada vez que se
+  // inserta, edita o borra una fila en Supabase, esta tabla se
+  // refresca sola sin que el usuario haga nada.
+  // Requiere tener Realtime habilitado para esta tabla en Supabase
+  // (Database -> Replication -> activar la tabla).
+  // ------------------------------------------------------------
+  cliente
+    .channel("cambios-registro-produccion")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: NOMBRE_TABLA },
+      (payload) => {
+        const idNuevo = payload.new && payload.new[COLUMNA_ID] ? [payload.new[COLUMNA_ID]] : [];
+        cargarDatos(idNuevo);
+      }
+    )
+    .subscribe();
+
+  // Respaldo: si por algún motivo realtime no está activado,
+  // igual refresca cada 30 segundos (a menos que se esté editando).
+  setInterval(() => {
+    if (idEnEdicion === null) cargarDatos();
+  }, 30000);
+</script>
+
+</body>
+</html>
